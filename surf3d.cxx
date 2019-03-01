@@ -15,7 +15,7 @@
 #include <string>
 #include "integral.h"
 #include "vtk3DSURF.h"
-#include "../vtkSURF/vtkRobustImageReader.h"
+#include "vtkRobustImageReader.h"
 
 using namespace std;
 
