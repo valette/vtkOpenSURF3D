@@ -27,7 +27,7 @@ endif (OPENMP_FOUND)
  
 add_definitions( -DNBTHREAD=${NBTHREAD} )
 
-OPTION(BUILD_SURFMATCH "Build surf match program. Requires the Toon library." ON)
+OPTION(BUILD_SURFMATCH "Build surf match program. Requires the Toon library." OFF)
 
 include_directories(${ZLIB_INCLUDE_DIRS})
 
