@@ -7,14 +7,16 @@
 
 
 typedef struct {
-		vtkImageData *source;
-		vtkImageData *integral;
-		int ThreadedComputationType;
-	 } ThreadData;
+
+	vtkImageData *source;
+	vtkImageData *integral;
+	int ThreadedComputationType;
+
+} ThreadData;
 
 
-vtkImageData *Integral(vtkImageData *source)
-{
+vtkImageData *Integral(vtkImageData *source) {
+
 	vtkImageData *integral = vtkImageData::New();
 
 	integral->CopyStructure(source);
@@ -29,53 +31,6 @@ vtkImageData *Integral(vtkImageData *source)
 	long long int* int_egral_incs = integral->GetIncrements();
 	long long int* sou_rce_incs = source->GetIncrements();
 
-/*
-	// first Line
-	ulli rs = 0;
-	for(int z=0; z<dims[2]; z++)
-	{
-		rs += sourc(0,0,z);
-		integ(0,0,z) = rs;
-	}
-
-	// first Plane
-	for(int y=1; y<dims[1]; y++)
-	{
-		rs = 0;
-		for(int z=0; z<dims[2]; z++)
-		{
-			rs += sourc(0, y, z);
-			integ(0, y, z) = rs + integ(0, y-1, z);
-		}
-	}
-
-	// Volume ...
-	ulli rp[dims[2]]; //Integral image of current x
-
-	for(int x=1; x<dims[0]; x++)
-	{
-		//Compute first Line of current x
-		rs = 0;
-		for(int z=0; z<dims[2]; z++)
-		{
-			rs += sourc(x,0,z);
-			rp[z] = rs;
-			integ(x, 0, z) = integ(x-1, 0, z) + rs;
-		}
-
-		for(int y=1; y<dims[1]; y++)
-		{
-			rs = 0;
-			for(int z=0; z<dims[2]; z++)
-			{
-				rs += sourc(x,y,z);
-				rp[z] += rs; // Attention, contient la derniere ligne explorée (ligne en cours pour [z]<z ligne precédente pour les z par encore atteint)
-				integ(x,y,z) = rp[z] + integ(x-1,y,z);
-			}
-		}
-	}
-*/
-
 	ThreadData data;
 	data.source = source;
 	data.integral = integral;
@@ -84,7 +39,6 @@ vtkImageData *Integral(vtkImageData *source)
 
 	vtkMultiThreader *Threader = vtkMultiThreader::New();
 	Threader->SetSingleMethod (ThreadedIntegral, (void *) &data);
-	Threader->SetNumberOfThreads(NBTHREAD);
 
 	Timer->StartTimer();
 	data.ThreadedComputationType = 0;
@@ -153,15 +107,8 @@ VTK_THREAD_RETURN_TYPE ThreadedIntegral (void *arg)
 	int dimY = dimensions[1];
 	int dimZ = dimensions[2];
 
+	switch (self->ThreadedComputationType) {
 
-
-
-
-
-
-
-		switch (self->ThreadedComputationType)
-	{
 	case 2:
 		// sum over z
 		for (int x = MyId; x < dimX; x += NumberOfThreads) {
