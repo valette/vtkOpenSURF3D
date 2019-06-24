@@ -20,8 +20,9 @@ GNU GPL
 
 ###  Dependencies ###
 
-* VTK www.vtk.org
 * CMAKE www.cmake.org
+* OpenCV www.opencv.org
+* VTK www.vtk.org
 
 ###  Compilation Guide ###
 	git clone https://github.com/valette/vtkOpenSURF3D.git
