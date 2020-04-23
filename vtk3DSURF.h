@@ -39,6 +39,9 @@ public :
 	void WritePointsCSVGZ(const char *fileName);
 	void WritePointsBinary(const char *fileName);
 
+	vtkSetMacro(PointFile, char*)
+	vtkGetMacro(PointFile, char*)
+
 	vtkSetMacro(Threshold, double)
 	vtkGetMacro(Threshold, double)
 	
@@ -62,6 +65,8 @@ public :
 
 protected :
 
+	void ReadIPoints();
+
 	//! Get the long descriptors i.e. sub volumes
 	static VTK_THREAD_RETURN_TYPE ThreadedSubVolumes (void *arg);
 
@@ -82,6 +87,7 @@ protected :
 	int DescriptorType;
 	int SubVolumeRadius;
 	int NumberOfPoints;
+	char *PointFile;
 
 	/// the constructor
 	vtk3DSURF() {
@@ -93,6 +99,7 @@ protected :
 		this->MaxSize = 100;
 		this->DescriptorType = 0;
 		this->NumberOfPoints = -1;
+		this->PointFile = 0;
 		this->SubVolumeRadius = 5;
 	}
 

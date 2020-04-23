@@ -39,7 +39,7 @@ public:
   };
 
   //! Constructor
-  Ipoint() : orientation(0), descriptor(0) {};
+  Ipoint() : orientation(0), descriptor(0), response(0), laplacian(0), scale(0), size(0) {};
 
   //! Gets the distance in descriptor space between Ipoints
   float operator-(const Ipoint &rhs)

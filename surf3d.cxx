@@ -41,6 +41,7 @@ int main( int argc, char *argv[] )
 	int numberOfPoints = -1;
 	int numberOfThreads = -1;
 	int subVolumeRadius = 5;
+	char *pointFile = 0;
 
 	string outfilename("points");
 
@@ -95,6 +96,10 @@ int main( int argc, char *argv[] )
 
 		if (strcmp(key,"-nt") == 0) {
 			numberOfThreads = atoi(value);
+		}
+
+		if (strcmp(key,"-p") == 0) {
+			pointFile = value;
 		}
 
 		if (strcmp(key,"-r") == 0) {
@@ -164,6 +169,13 @@ int main( int argc, char *argv[] )
 	SURF->SetNumberOfPoints(numberOfPoints);
 	SURF->SetSubVolumeRadius(subVolumeRadius);
 	SURF->SetNbThread(numberOfThreads);
+
+	if ( pointFile ) {
+
+		cout << "Use points in " << pointFile << endl;
+		SURF->SetPointFile( pointFile );
+
+	}
 	
 	if (bmask) {
 

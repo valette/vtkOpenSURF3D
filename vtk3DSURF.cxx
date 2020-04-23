@@ -29,6 +29,40 @@ vtkStandardNewMacro(vtk3DSURF);
 
 bool compareResponses (Ipoint &i,Ipoint &j) { return (i.response>j.response); }
 
+void vtk3DSURF::ReadIPoints() {
+
+    std::string line;
+    this->points.clear();
+	std::cout << "Read : " << this->PointFile << std::endl;
+	ifstream file( this->PointFile );
+
+	double origin[ 3 ], spacing[ 3 ];
+	this->Cast->GetOrigin( origin );
+	this->Cast->GetSpacing( spacing );
+
+    while( std::getline( file, line ) ) {
+
+		std::stringstream lineStream(line);
+		std::string  cell;
+
+		Ipoint point;
+		if ( !std::getline( lineStream, cell, ',' ) ) continue;
+		float temp;
+		temp = std::stof( cell );
+		point.x = ( temp - origin[ 0 ] ) / spacing[ 0 ];
+		std::getline( lineStream, cell, ',' );
+		temp = std::stof( cell );
+		point.y = ( temp - origin[ 1 ] ) / spacing[ 1 ];
+		std::getline( lineStream, cell, ',' );
+		temp = std::stof( cell );
+		point.z = ( temp - origin[ 2 ] ) / spacing[ 2 ];
+		std::getline( lineStream, cell, ',' );
+		point.scale = std::stof( cell );
+		this->points.push_back( point );
+
+    }
+
+}
 
 void vtk3DSURF::Update() {
 
@@ -162,6 +196,7 @@ void vtk3DSURF::Update() {
 		hessian.setMask(Mask);
 
 	hessian.getIpoints();
+	if ( this->PointFile ) this->ReadIPoints();
 
 	Timer->StopTimer();
 	cout << "FastHessian computed in " <<
