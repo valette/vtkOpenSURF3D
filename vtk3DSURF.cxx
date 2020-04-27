@@ -39,6 +39,7 @@ void vtk3DSURF::ReadIPoints() {
 	double origin[ 3 ], spacing[ 3 ];
 	this->Cast->GetOrigin( origin );
 	this->Cast->GetSpacing( spacing );
+	double Sspacing = pow( spacing[ 0 ] * spacing[ 1 ] * spacing[ 2 ], 1.0 / 3.0 );
 
     while( std::getline( file, line ) ) {
 
@@ -57,7 +58,7 @@ void vtk3DSURF::ReadIPoints() {
 		temp = std::stof( cell );
 		point.z = ( temp - origin[ 2 ] ) / spacing[ 2 ];
 		std::getline( lineStream, cell, ',' );
-		point.scale = std::stof( cell );
+		point.scale = std::stof( cell ) / Sspacing;
 		this->points.push_back( point );
 
     }
