@@ -77,6 +77,7 @@ protected :
 	vtkImageData *Mask;
 	
 	vtkImageData *Cast;
+	vtkImageData *Resized;
 	
 	vtkImageData *IntegralData;
 
@@ -100,6 +101,7 @@ protected :
 		this->DescriptorType = 0;
 		this->NumberOfPoints = -1;
 		this->PointFile = 0;
+		this->Resized = 0;
 		this->SubVolumeRadius = 5;
 	}
 

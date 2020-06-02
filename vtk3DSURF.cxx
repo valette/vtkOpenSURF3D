@@ -5,6 +5,7 @@
 #include <vtkTimerLog.h>
 #include <vtkMultiThreader.h>
 #include <vtkMetaImageWriter.h>
+#include <vtkImageCast.h>
 #include <vtkImageShiftScale.h>
 #include <vtkImageResample.h>
 #include <vtkImageLuminance.h>
@@ -155,27 +156,29 @@ void vtk3DSURF::Update() {
 
 	}
 
-	if (temp->GetScalarType() != VTK_INT) {
-		double Range[2];
-		temp->GetScalarRange(Range);
-		cout << "Range " << Range[0] << " " <<  Range[1] << " " << " " << endl;
-		vtkImageShiftScale *Cast = vtkImageShiftScale::New();
-		Cast->SetClampOverflow(1);
-		Cast->SetInputData(temp);
-		Cast->SetOutputScalarTypeToInt ();
-		Cast->SetShift(-Range[0]);
-		if (this->NbThread > 0) {
-			Cast->SetNumberOfThreads(NbThread);
-		}
-		Cast->Update();
-		temp = this->Cast = Cast->GetOutput();
-		this->Cast->Register(this);
-		Cast->Delete();
-	} else {
-		this->Cast = temp;
-		temp->Register(this);
-	}
+	vtkImageCast *imageCast = vtkImageCast::New();
+	imageCast->SetClampOverflow(1);
+	imageCast->SetInputData(temp);
+	imageCast->SetOutputScalarTypeToInt ();
+	if (this->NbThread > 0) imageCast->SetNumberOfThreads(NbThread);
+	imageCast->Update();
+	this->Resized = imageCast->GetOutput();
+	this->Resized->Register(this);
+	imageCast->Delete();
 
+	double Range[2];
+	temp->GetScalarRange(Range);
+	cout << "Range " << Range[0] << " " <<  Range[1] << " " << " " << endl;
+	vtkImageShiftScale *Shift = vtkImageShiftScale::New();
+	Shift->SetClampOverflow(1);
+	Shift->SetInputData( this->Resized );
+	Shift->SetOutputScalarTypeToInt ();
+	Shift->SetShift( -Range[ 0 ] );
+	if (this->NbThread > 0) Shift->SetNumberOfThreads(NbThread);
+	Shift->Update();
+	this->Cast = Shift->GetOutput();
+	this->Cast->Register( this );
+	Shift->Delete();
 
 	Timer->StartTimer();
 
@@ -280,15 +283,15 @@ VTK_THREAD_RETURN_TYPE vtk3DSURF::ThreadedSubVolumes (void *arg) {
 	const int radius = self->SubVolumeRadius;
 	const int size = 8 * radius * radius * radius;
 	vtkImageResize * resize = vtkImageResize::New();
-	resize->SetInputData(self->Cast);
+	resize->SetInputData(self->Resized);
 	resize->SetResizeMethodToOutputDimensions ();
 	resize->SetOutputDimensions( 2 * radius, 2 * radius, 2 * radius );
 	resize->SetNumberOfThreads( 1 );
 	resize->SetCropping( 1 );
 	double spacing[3];
-	self->Cast->GetSpacing( spacing );
+	self->Resized->GetSpacing( spacing );
 	double origin[3];
-	self->Cast->GetOrigin( origin );
+	self->Resized->GetOrigin( origin );
 
 	for (int id = MyId; id < self->points.size(); id += NumberOfThreads) {
 
