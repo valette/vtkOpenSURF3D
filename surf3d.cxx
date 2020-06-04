@@ -16,6 +16,7 @@
 #include "integral.h"
 #include "vtk3DSURF.h"
 #include "vtkRobustImageReader.h"
+#include "picojson.h"
 
 using namespace std;
 
@@ -169,6 +170,22 @@ int main( int argc, char *argv[] )
 	SURF->SetNumberOfPoints(numberOfPoints);
 	SURF->SetSubVolumeRadius(subVolumeRadius);
 	SURF->SetNbThread(numberOfThreads);
+
+	double boundsArray[ 6 ];
+	image->GetBounds( boundsArray );
+	picojson::object root, bounds;
+	bounds[ "xmin" ] = picojson::value( boundsArray[ 0 ] );
+	bounds[ "xmax" ] = picojson::value( boundsArray[ 1 ] );
+	bounds[ "ymin" ] = picojson::value( boundsArray[ 2 ] );
+	bounds[ "ymax" ] = picojson::value( boundsArray[ 3 ] );
+	bounds[ "zmin" ] = picojson::value( boundsArray[ 4 ] );
+	bounds[ "zmax" ] = picojson::value( boundsArray[ 5 ] );
+	root[ "bounds" ] = picojson::value( bounds );
+
+	ofstream boundsFile;
+	boundsFile.open( outfilename+".json" , std::ofstream::out | std::ofstream::trunc );
+	boundsFile << picojson::value( root );
+	boundsFile.close();
 
 	if ( pointFile ) {
 
