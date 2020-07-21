@@ -25,7 +25,6 @@
 
 class ResponseLayer;
 
-
 //Maximum value
 static const int OCTAVES = 5;
 static const int INTERVALS = 4;
@@ -93,9 +92,9 @@ class FastHessian {
     void interpolateExtremum(int d, int r, int c, ResponseLayer *t, ResponseLayer *m, ResponseLayer *b, bool corner);
     void interpolateStep(int d, int r, int c, ResponseLayer *t, ResponseLayer *m, ResponseLayer *b,
                           double* xX, double* xY, double* xZ, double* xS, bool corner);
-    CvMat* deriv4D(int d, int r, int c, ResponseLayer *t, ResponseLayer *m, ResponseLayer *b, bool corner);
+    cv::Matx41d* deriv4D(int d, int r, int c, ResponseLayer *t, ResponseLayer *m, ResponseLayer *b, bool corner);
 
-    CvMat* hessian4D(int d, int r, int c, ResponseLayer *t, ResponseLayer *m, ResponseLayer *b, bool corner);
+    cv::Matx44d* hessian4D(int d, int r, int c, ResponseLayer *t, ResponseLayer *m, ResponseLayer *b, bool corner);
 
 	static VTK_THREAD_RETURN_TYPE ThreadedRL (void *arg);
 
@@ -134,7 +133,7 @@ class FastHessian {
     //! Threshold value for blob resonses
     float thresh;
 
-	inline void print(CvMat *input);
+	inline void print(cv::Mat *input);
 };
 
 

@@ -23,6 +23,17 @@ using namespace std;
 int nb_pts = 0;
 int nb_corner_pts = 0;
 
+#define PRINT(mat1) 											\
+	{ bool flag = false; 												\
+	for (int i = 0 ; i < mat1.rows ; i ++)	{							\
+		for (int j = 0 ; j < mat1.cols ; j ++) 						\
+			cout << mat1( i, j)<<"\t"; 				\
+		cout<<endl;\
+	}\
+		cout<<endl;\
+}
+
+
 //-------------------------------------------------------
 
 //! Constructor without image
@@ -614,56 +625,39 @@ void FastHessian::interpolateExtremum(int d, int r, int c, ResponseLayer *t, Res
 void FastHessian::interpolateStep(int d, int r, int c, ResponseLayer *t, ResponseLayer *m, ResponseLayer *b,
                                   double* xX, double* xY, double* xZ, double* xS, bool corner)
 {
-  CvMat* dD, * H, * H_inv, X, *W, *V, *W_inv, *U_t, *tmp;
   double x[4] = { 0 };
 
-  dD = deriv4D( d, r, c, t, m, b, corner );
+  cv::Matx41d* dD = deriv4D( d, r, c, t, m, b, corner );
+  cv::Matx44d* H = hessian4D( d, r, c, t, m, b, corner );
+  cv::Matx44d H_inv, W_inv, V, U_t, tmp;
+  cv::Matx41d W;
 
-  H = hessian4D( d, r, c, t, m, b, corner );
+  W_inv = cv::Matx44d::zeros();
+  cv::SVD::compute(*H, W, U_t, V);
 
-  H_inv = cvCreateMat( 4, 4, CV_64FC1 );
+  W_inv( 0, 0 ) = 1 / W(0);
 
-  W 	= cvCreateMat( 4, 4, CV_64FC1 );
-  W_inv = cvCreateMat( 4, 4, CV_64FC1 );cvZero(W_inv);
-  V 	= cvCreateMat( 4, 4, CV_64FC1 );
-  U_t 	= cvCreateMat( 4, 4, CV_64FC1 );
-  tmp 	= cvCreateMat( 4, 4, CV_64FC1 );
+  for (int i = 1 ; i < 4 ; i++)
+    if ( W(i) / W(0) < 0.001) {
+      W_inv( i, i ) = 0;
+    } else {
+      W_inv( i, i ) = 1.0f / W( i);
+    }
+ 
+  U_t = U_t.t();
+  tmp = W_inv * U_t;
+  V = V.t();
+  H_inv = V *tmp;
+  cv::Matx41d X = cv::Matx41d::zeros();
+  X = - H_inv* (*dD);
 
-	cvSVD(H, W, U_t, V, CV_SVD_U_T);
+  delete dD;
+  delete H;
 
-	bool flag = false;
-
-	cvmSet(W_inv, 0, 0, 1/cvmGet(W, 0, 0));
-
-	for (int i = 1 ; i < 4 ; i++)
-		if (cvmGet(W, i, i)/cvmGet(W, 0, 0) < 0.001)
-		{
-			cvmSet(W_inv, i, i, 0);
-		}
-		else
-		{
-			cvmSet(W_inv, i, i, 1.0f/cvmGet(W, i, i));
-			flag = true;
-		}
-
-	cvMatMul(W_inv, U_t, tmp);
-	cvMatMul(V, tmp, H_inv);
-
-
-  //cvInvert( H, H_inv, CV_SVD );
-
-
-  cvInitMatHeader( &X, 4, 1, CV_64FC1, x, CV_AUTOSTEP );
-  cvGEMM( H_inv, dD, -1, NULL, 0, &X, 0 );
-
-  cvReleaseMat( &dD );
-  cvReleaseMat( &H );
-  cvReleaseMat( &H_inv );
-
-  *xX = x[0];
-  *xY = x[1];
-  *xZ = x[2];
-  *xS = x[3];
+  *xX = X(0);
+  *xY = X(1);
+  *xZ = X(2);
+  *xS = X(3);
   /*
   if( fabs( *xX ) > 1.0f  ||  fabs( *xY ) > 1.0f  ||  fabs( *xZ ) > 1.0f  ||  fabs( *xS ) > 1.0f )
 	{
@@ -675,9 +669,8 @@ void FastHessian::interpolateStep(int d, int r, int c, ResponseLayer *t, Respons
 //-------------------------------------------------------
 
 //! Computes the partial derivatives in x, y, and scale of a pixel.
-CvMat* FastHessian::deriv4D(int d, int r, int c, ResponseLayer *t, ResponseLayer *m, ResponseLayer *b, bool corner)
+cv::Matx41d* FastHessian::deriv4D(int d, int r, int c, ResponseLayer *t, ResponseLayer *m, ResponseLayer *b, bool corner)
 {
-  CvMat* dI;
   double dx, dy, ds, dz;
 
 	if (corner) {
@@ -692,12 +685,16 @@ CvMat* FastHessian::deriv4D(int d, int r, int c, ResponseLayer *t, ResponseLayer
 	  ds = (t->getResponse(r, c, d) - 		 b->getResponse(r, c, d, t)) / 2.0;
 	}
 
+  cv::Matx41d* dI = new cv::Matx41d();
+  (*dI)(0) = dx;
+  (*dI)(1) = dy;
+  (*dI)(2) = dz;
+  (*dI)(3) = ds;
 
-  dI = cvCreateMat( 4, 1, CV_64FC1 );
-  cvmSet( dI, 0, 0, dx );
-  cvmSet( dI, 1, 0, dy );
-  cvmSet( dI, 2, 0, dz );
-  cvmSet( dI, 3, 0, ds );
+//  cvmSet( dI, 0, 0, dx );
+//  cvmSet( dI, 1, 0, dy );
+//  cvmSet( dI, 2, 0, dz );
+//  cvmSet( dI, 3, 0, ds );
 
   return dI;
 }
@@ -705,20 +702,20 @@ CvMat* FastHessian::deriv4D(int d, int r, int c, ResponseLayer *t, ResponseLayer
 
 #define CHECKMAT(mat) \
 	{bool flag = false; \
-	for (int i = 0 ; i < mat->rows ; i ++) \
-		for (int j = 0 ; j < mat->cols ; j ++) \
-			if (std::isnan(cvmGet(mat, i, j))) flag = true;\
+	for (int i = 0 ; i < mat.rows ; i ++) \
+		for (int j = 0 ; j < mat.cols ; j ++) \
+			if (std::isnan(mat( i, j))) flag = true;\
 	if (flag) cout << "NaN : "<< #mat << endl; }
 
 #define PRINTIF(mat1, mat2) 											\
 	{ bool flag = false; 												\
-	for (int i = 0 ; i < mat1->rows ; i ++)								\
-		for (int j = 0 ; j < mat1->cols ; j ++) 						\
-			if (std::isnan(cvmGet(mat1, i, j))) flag = true; 				\
+	for (int i = 0 ; i < mat1.rows ; i ++)								\
+		for (int j = 0 ; j < mat1.cols ; j ++) 						\
+			if (std::isnan(mat1( i, j))) flag = true; 				\
 	if (flag) {cout << "Mat Nan : " << #mat1 << " printMat : " << #mat2 << endl;	\
-	for (int i = 0 ; i < mat2->rows ; i ++) 							\
-		for (int j = 0 ; j < mat2->cols ; j ++) 						\
-			cout << cvmGet(mat2, i, j) << "\t";							\
+	for (int i = 0 ; i < mat2.rows ; i ++) 							\
+		for (int j = 0 ; j < mat2.cols ; j ++) 						\
+			cout << mat2( i, j) << "\t";							\
 	cout << endl;}}
 
 
@@ -728,13 +725,11 @@ void FastHessian::FittingQuadric(int d, int r, int c, ResponseLayer *t, Response
 {
 
 	// Fitting
-	CvMat* M, W, *A, *b_mat, *A_inv, X, *Resp;
-	double w[15] = { 0 };
-	double x[4] = { 0 };
+//	double x[4] = { 0 };
+	cv::Matx< double, 4, 1 > X;
 
-	Resp = cvCreateMat( 81, 1, CV_64FC1 );
-
-	M = cvCreateMat( 81, 15, CV_64FC1 );
+	cv::Matx< double, 81, 1 > Resp;
+	cv::Matx< double, 81, 15 > M;
 
 	int index  = 0;
 	int index2 = 0;
@@ -744,9 +739,12 @@ void FastHessian::FittingQuadric(int d, int r, int c, ResponseLayer *t, Response
 	for (int k = -1 ; k <= 1 ; k++)
 	{
 		if (corner) {
-			cvmSet( Resp, index2, 0, b->getCornerResponse(r + i, c + j, d + k, t)); index2++;
-			cvmSet( Resp, index2, 0, m->getCornerResponse(r + i, c + j, d + k, t)); index2++;
-			cvmSet( Resp, index2, 0, t->getCornerResponse(r + i, c + j, d + k)); index2++;
+			Resp( index2, 0 ) = b->getCornerResponse(r + i, c + j, d + k, t);
+			index2++;
+			Resp( index2, 0 ) = m->getCornerResponse(r + i, c + j, d + k, t);
+			index2++;
+			Resp( index2, 0 ) = t->getCornerResponse(r + i, c + j, d + k);
+			index2++;
 		} else {
 
 		}
@@ -754,21 +752,21 @@ void FastHessian::FittingQuadric(int d, int r, int c, ResponseLayer *t, Response
 		for (int l = -1 ; l <= 1 ; l++)
 		{
 			// Matrice des Parametres
-			cvmSet( M, index, 0, i*i);
-			cvmSet( M, index, 1, j*j);
-			cvmSet( M, index, 2, k*k);
-			cvmSet( M, index, 3, l*l);
-			cvmSet( M, index, 4, i*j);
-			cvmSet( M, index, 5, i*k);
-			cvmSet( M, index, 6, i*l);
-			cvmSet( M, index, 7, j*k);
-			cvmSet( M, index, 8, j*l);
-			cvmSet( M, index, 9, k*l);
-			cvmSet( M, index, 10, i);
-			cvmSet( M, index, 11, j);
-			cvmSet( M, index, 12, k);
-			cvmSet( M, index, 13, l);
-			cvmSet( M, index, 14, 1);
+			M( index, 0 ) = i * i;
+			M( index, 1 ) = j * j;
+			M( index, 2 ) = k * k;
+			M( index, 3 ) = l * l;
+			M( index, 4 ) = i * j;
+			M( index, 5 ) = i * k;
+			M( index, 6 ) = i * l;
+			M( index, 7 ) = j * k;
+			M( index, 8 ) = j * l;
+			M( index, 9 ) = k * l;
+			M( index, 10 ) = i;
+			M( index, 11 ) = j;
+			M( index, 12 ) = k;
+			M( index, 13 ) = l;
+			M( index, 14 ) =  1;
 
 			index++;
 		}
@@ -780,111 +778,129 @@ void FastHessian::FittingQuadric(int d, int r, int c, ResponseLayer *t, Response
 
 	CvMat *M_t, *temp, *temp2, *temp3;
 
-	M_t   = cvCreateMat( 15, 81, CV_64FC1 );
-	cvTranspose(M, M_t);
+	cv::Matx<double 15, 81> M_t;
+//	cvTranspose(M, M_t);
+	M_t = M.t();
 
-	temp  = cvCreateMat( 15, 15, CV_64FC1 );
-	cvMatMul(M_t, M, temp);
+	cv::Matx< double, 15, 15 > temp;
+//	cvMatMul(M_t, M, temp);
+	temp = M_t * M
 
-	temp2 = cvCreateMat( 15, 15, CV_64FC1 );
-	cvInvert(temp, temp2);
+	cv::Matx< double, 15, 15 > temp2;
+	temp2 = temp.inv();
+//	cvInvert(temp, temp2);
 
-	temp3 = cvCreateMat( 15, 81, CV_64FC1 );
-	cvMatMul(temp2, M_t, temp3);
+	cv::Matx< doube, 15, 81> temp3;
+//	cvMatMul(temp2, M_t, temp3);
+	temp3 = temp2 * M_t;
 
-	cvInitMatHeader( &W, 15, 1, CV_64FC1, w, CV_AUTOSTEP );
-	cvMatMul(temp3, Resp, &W);
+	//cvInitMatHeader( &W, 15, 1, CV_64FC1, w, CV_AUTOSTEP );
+	cv::Matx< double, 15, 1 > W;
+	W = temp3 * Resp;
+//	cvMatMul(temp3, Resp, &W);
 
 #else
-{
-	CvMat *S, *S_inv, *S_inv_t, *V, *U_t, *tmp, *tmp2;
+//{
+//	CvMat *S, *S_inv, *S_inv_t, *V, *U_t, *tmp, *tmp2;
 
-  S 		= cvCreateMat( 81, 15, CV_64FC1 );
-  S_inv		= cvCreateMat( 81, 15, CV_64FC1 );cvZero(S_inv);
-  S_inv_t	= cvCreateMat( 15, 81, CV_64FC1 );
-  V 		= cvCreateMat( 15, 15, CV_64FC1 );
-  U_t 		= cvCreateMat( 81, 81, CV_64FC1 );
+  cv::Matx< double, 81, 15> S;
+  cv::Matx< double, 81, 15> S_inv;
+  S_inv = cv::Matx< double, 81, 15>::zeros();
+  cv::Matx< double, 15, 81> S_inv_t;
+  cv::Matx< double, 15, 15> V;
+  cv::Matx< double, 81, 81> U_t;
 
-  cvSVD(M, S, U_t, V, CV_SVD_U_T);
+ cv::SVD::compute(M, S, U_t, V);
+
+//  cvSVD(M, S, U_t, V, CV_SVD_U_T);
 
 	CHECKMAT(M)
 	CHECKMAT(S)
 	CHECKMAT(U_t)
 	CHECKMAT(V)
-
 	CHECKMAT(Resp)
 
 
 	bool flag = false;
 
-	cvmSet(S_inv, 0, 0, 1/cvmGet(S, 0, 0));
+	S_inv( 0, 0) =  1 / S( 0, 0 );
 
 	for (int i = 1 ; i < 15 ; i++)
-		if (cvmGet(S, i, i)/cvmGet(S, 0, 0) < 0.001)
-			cvmSet(S_inv, i, i, 0);
+		if (S( i, i)/S( 0, 0) < 0.001)
+			S_inv( i, i ) = 0;
 		else
-		{	cvmSet(S_inv, i, i, 1.0f/cvmGet(S, i, i));
+		{	S_inv( i, i ) = 1.0f/S( i, i );
 			flag = true;}
 
 	if (flag) cout << "truncated SVD" << endl;
 
-	cvTranspose(S_inv, S_inv_t);
+	S_inv_t = S_inv.t();
+//	cvTranspose(S_inv, S_inv_t);
 
-	tmp = cvCreateMat(81, 1, CV_64FC1);
-	cvMatMul(U_t, Resp, tmp);
+	cv::Matx< double, 81, 1 > tmp;
+//	tmp = cvCreateMat(81, 1, CV_64FC1);
+	tmp = U_t * Resp;
+//	cvMatMul(U_t, Resp, tmp);
 
 	PRINTIF(tmp, U_t)
 	PRINTIF(tmp, Resp)
 
-	tmp2 = cvCreateMat(15, 1, CV_64FC1);
-	cvMatMul(S_inv_t, tmp, tmp2);
+	cv::Matx< double, 15, 1 > tmp2;
+//	cvMatMul(S_inv_t, tmp, tmp2);
+	tmp2 = S_inv_t * tmp;
 	CHECKMAT(tmp2)
-	cvInitMatHeader( &W, 15, 1, CV_64FC1, w, CV_AUTOSTEP );
-	cvMatMul(V, tmp2, &W);
-}
+//	cvInitMatHeader( &W, 15, 1, CV_64FC1, w, CV_AUTOSTEP );
+	cv::Matx< double, 15, 1 > W;
+//	cvMatMul(V, tmp2, &W);
+	W = V * tmp2;
+//}
 #endif
 
 
 	// Maximum
-	A = cvCreateMat( 4, 4, CV_64FC1 );
-	b_mat = cvCreateMat( 4, 1, CV_64FC1 );
+//	A = cvCreateMat( 4, 4, CV_64FC1 );
+//	b_mat = cvCreateMat( 4, 1, CV_64FC1 );
 
-	CHECKMAT((&W))
+	cv::Matx< double, 4, 4> A;
+	cv::Matx< double, 4, 1> b_mat;
+
+	CHECKMAT(W)
 
 	//Matrice A
-	cvmSet( A, 0, 0, w[0]*2);
-	cvmSet( A, 0, 1, w[4]);
-	cvmSet( A, 0, 2, w[5]);
-	cvmSet( A, 0, 3, w[6]);
-	cvmSet( A, 1, 0, w[4]);
-	cvmSet( A, 1, 1, w[1]*2);
-	cvmSet( A, 1, 2, w[7]);
-	cvmSet( A, 1, 3, w[9]);
-	cvmSet( A, 2, 0, w[5]);
-	cvmSet( A, 2, 1, w[8]);
-	cvmSet( A, 2, 2, w[2]*2);
-	cvmSet( A, 2, 3, w[10]);
-	cvmSet( A, 3, 0, w[6]);
-	cvmSet( A, 3, 1, w[8]);
-	cvmSet( A, 3, 2, w[9]);
-	cvmSet( A, 3, 3, w[3]*2);
+	A( 0, 0 ) = W( 0 ) * 2;
+	A( 0, 1 ) = W( 4 );
+	A( 0, 2 ) = W( 5 );
+	A( 0, 3 ) = W( 6 );
+	A( 1, 0 ) = W( 4 );
+	A( 1, 1 ) = W( 1 ) * 2;
+	A( 1, 2 ) = W( 7 );
+	A( 1, 3 ) = W( 9 );
+	A( 2, 0 ) = W( 5 );
+	A( 2, 1 ) = W( 8 );
+	A( 2, 2 ) = W( 2 ) * 2;
+	A( 2, 3 ) = W( 10 );
+	A( 3, 0 ) = W( 6 );
+	A( 3, 1 ) = W( 8 );
+	A( 3, 2 ) = W( 9 );
+	A( 3, 3 ) = W( 3 ) * 2;
 
-	cvmSet( b_mat, 0, 0, w[10]);
-	cvmSet( b_mat, 1, 0, w[11]);
-	cvmSet( b_mat, 2, 0, w[12]);
-	cvmSet( b_mat, 3, 0, w[13]);
+	b_mat( 0 ) = W( 10 );
+	b_mat( 1 ) = W( 11 );
+	b_mat( 2 ) = W( 12 );
+	b_mat( 3 ) = W( 13 );
 
 
 #ifdef USE_SVD
 {
-	CvMat *S, *S_inv, *V, *U_t, *tmp, *tmp2;
+//	CvMat *S, *S_inv, *V, *U_t, *tmp, *tmp2;
 
-  S 		= cvCreateMat( 4, 4, CV_64FC1 );
-  S_inv		= cvCreateMat( 4, 4, CV_64FC1 );cvZero(S_inv);
-  V 		= cvCreateMat( 4, 4, CV_64FC1 );
-  U_t 		= cvCreateMat( 4, 4, CV_64FC1 );
+  cv::Matx< double, 4, 4 > S;
+  cv::Matx< double, 4, 4 > S_inv = cv::Matx< double, 4, 4 >::zeros();
+  cv::Matx< double, 4, 4 > V;
+  cv::Matx< double, 4,4 > U_t;
 
-  cvSVD(A, S, U_t, V, CV_SVD_U_T);
+  cv::SVD::compute( A, S, U_t, V);
+//  cvSVD(A, S, U_t, V, CV_SVD_U_T);
 
 	CHECKMAT(M)
 	CHECKMAT(S)
@@ -893,25 +909,30 @@ void FastHessian::FittingQuadric(int d, int r, int c, ResponseLayer *t, Response
 
 	bool flag = false;
 
-	cvmSet(S_inv, 0, 0, 1/cvmGet(S, 0, 0));
+	S_inv( 0, 0 ) = 1.0 / S( 0, 0 );
 
 	for (int i = 1 ; i < 4 ; i++)
-		if (cvmGet(S, i, i)/cvmGet(S, 0, 0) < 0.001)
-			cvmSet(S_inv, i, i, 0);
+		if ( S( i, i) /  S( 0, 0 ) < 0.001 )
+			S_inv( i, i ) = 0;
 		else
-		{	cvmSet(S_inv, i, i, 1.0f/cvmGet(S, i, i));
+		{	S_inv( i, i ) = 1.0f / S( i, i );
 			flag = true;}
 
 	if (flag) cout << "truncated SVD 2" << endl;
 
-	tmp = cvCreateMat(4, 1, CV_64FC1);
-	cvMatMul(U_t, b_mat, tmp);
+	cv::Matx< double, 4, 1 > tmp;
+//	cvMatMul(U_t, b_mat, tmp);
+	tmp = U_t * b_mat;
 
-	tmp2 = cvCreateMat(4, 1, CV_64FC1);
-	cvMatMul(S_inv, tmp, tmp2);
+	cv::Matx< double, 4, 1 > tmp2;
+//	tmp2 = cvCreateMat(4, 1, CV_64FC1);
+	tmp2 = S_inv * tmp;
+//	cvMatMul(S_inv, tmp, tmp2);
 
-	cvInitMatHeader( &X, 4, 1, CV_64FC1, x, CV_AUTOSTEP );
-	cvMatMul(V, tmp2, &X);
+//	cvInitMatHeader( &X, 4, 1, CV_64FC1, x, CV_AUTOSTEP );
+	X = V * tmp2;
+//	cvMatMul(V, tmp2, &X);
+
 }
 
 #else
@@ -921,10 +942,10 @@ void FastHessian::FittingQuadric(int d, int r, int c, ResponseLayer *t, Response
 	cvMatMul(A_inv, b_mat, &X);
 #endif
 
-	*xX = x[0];
-	*xY = x[1];
-	*xZ = x[2];
-	*xS = x[3];
+	*xX = X( 0 );
+	*xY = X( 1 );
+	*xZ = X( 2 );
+	*xS = X( 3 );
 
 }
 
@@ -932,9 +953,9 @@ void FastHessian::FittingQuadric(int d, int r, int c, ResponseLayer *t, Response
 //-------------------------------------------------------
 
 //! Computes the 3D Hessian matrix for a pixel.
-CvMat* FastHessian::hessian4D(int d, int r, int c, ResponseLayer *t, ResponseLayer *m, ResponseLayer *b, bool Corner)
+cv::Matx44d* FastHessian::hessian4D(int d, int r, int c, ResponseLayer *t, ResponseLayer *m, ResponseLayer *b, bool Corner)
 {
-	CvMat* H;
+	cv::Matx44d* H;
 	double v, dxx, dyy, dzz, dss, dxy, dxz, dxs, dyz, dys, dzs;
 
 	if (Corner) {
@@ -983,31 +1004,31 @@ CvMat* FastHessian::hessian4D(int d, int r, int c, ResponseLayer *t, ResponseLay
 				b->getResponse(r, c, d + 1, t) + b->getResponse(r, c, d - 1, t) ) / 4.0;
 	}
 
-  H = cvCreateMat( 4, 4, CV_64FC1 );
-  cvmSet( H, 0, 0, dxx );
-  cvmSet( H, 0, 1, dxy );
-  cvmSet( H, 0, 2,  dxz );
-  cvmSet( H, 0, 3, dxs );
+  H = new cv::Matx44d;
 
-  cvmSet( H, 1, 0, dxy );
-  cvmSet( H, 1, 1, dyy );
-  cvmSet( H, 1, 2, dyz );
-  cvmSet( H, 1, 3, dys );
+  (*H)(0,0) = dxx;
+  (*H)(0,1) = dxy;
+  (*H)(0,2) = dxz;
+  (*H)(0,3) = dxs;
 
-  cvmSet( H, 2, 0, dxz );
-  cvmSet( H, 2, 1, dyz );
-  cvmSet( H, 2, 2, dzz );
-  cvmSet( H, 2, 3, dzs );
+  (*H)(1,0) = dxy;
+  (*H)(1,1) = dyy;
+  (*H)(1,2) = dyz;
+  (*H)(1,3) = dys;
 
-  cvmSet( H, 3, 0, dxs );
-  cvmSet( H, 3, 1, dys );
-  cvmSet( H, 3, 2, dzs );
-  cvmSet( H, 3, 3, dss );
+  (*H)(2,0) = dxz;
+  (*H)(2,1) = dyz;
+  (*H)(2,2) = dzz;
+  (*H)(2,3) = dzs;
 
+  (*H)(3,0) = dxs;
+  (*H)(3,1) = dys;
+  (*H)(3,2) = dzs;
+  (*H)(3,3) = dss;
 
   return H;
 }
-
+/*
 void FastHessian::print(CvMat* input)
 {
 	for (int x = 0 ; x < input->cols ; x++)
@@ -1022,7 +1043,7 @@ void FastHessian::print(CvMat* input)
 
 	cout << endl;
 }
-
+*/
 void FastHessian::WriteResponseMap()
 {
 
