@@ -25,7 +25,7 @@ int main( int argc, char *argv[] )
 {
 	
 	if (argc < 2) {
-		cout << "Usage : SURF file [options]" << endl;
+		cout << "Usage : surf3d file [options]" << endl;
 		exit(1);
 	}
 
