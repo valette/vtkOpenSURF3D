@@ -30,4 +30,26 @@ GNU GPL
 	cmake . -DCMAKE_BUILD_TYPE=Release
 	make
 
+###  Usage ###
+
+	surf3d file [options]
+
+"file" is a 3D image file. Supported formats are: NIFTI, mhd
+
+Available options:
+ * -s spacing : resample input image to isotropic sampling with given spacing
+ * -t threshold : set detector threshold. Default: 0
+ * -o basename : set output file name. Default: "points"
+ * -json 0/1 : write points as json file. Default : 0
+ * -csv 0/1 : write points as csv file. Default : 0
+ * -bin 0/1 : write points as bin file. Default : 0
+ * -csvgz 0/1 : write points as csv.gz file. Default : 1
+ * -n number : maximum number of points
+ * -r radius : descriptor volume radius. Default : 5
+ * -type 0/1/2 : descriptor type : 
+	* 0 : SURF3D descriptor (default). Descriptor size : 48
+	* 1 : subvolume HAAR coefficients. Descriptor size : 24 * radius^3
+	* 2 : subvolume raw voxels. Descriptor size : 8 * radius^3
+	
+
 comments, suggestions : https://github.com/valette/vtkOpenSURF3D/issues
