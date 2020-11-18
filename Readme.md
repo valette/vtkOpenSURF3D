@@ -51,5 +51,14 @@ Available options:
 	* 1 : subvolume HAAR coefficients. Descriptor size : 24 * radius^3
 	* 2 : subvolume raw voxels. Descriptor size : 8 * radius^3
 	
+### Output keypoints format ###
+
+Each keypoint is described by a list of values:
+ * x, y, z coordinates
+ * scale
+ * sign of laplacian (0 or 1)
+ * detector response
+ * descriptor (48 components for the SURF3D descriptor)
+
 
 comments, suggestions : https://github.com/valette/vtkOpenSURF3D/issues
