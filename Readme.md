@@ -51,5 +51,16 @@ Available options:
 	* 1 : subvolume HAAR coefficients. Descriptor size : 24 * radius^3
 	* 2 : subvolume raw voxels. Descriptor size : 8 * radius^3
 	
+### Output keypoints format ###
+
+Each keypoint is described by a list of values:
+ * x, y, z coordinates
+ * scale
+ * sign of laplacian (0 or 1)
+ * detector response
+ * descriptor (48 components for the SURF3D descriptor)
+
+Note that there is no orientation matrix as we do not estimate orientation (upright SURF) more details here:
+https://www.archives-ouvertes.fr/hal-01284240/document
 
 comments, suggestions : https://github.com/valette/vtkOpenSURF3D/issues
