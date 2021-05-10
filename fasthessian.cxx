@@ -231,7 +231,7 @@ void FastHessian::getIpoints()
 
 
 	//Remove OutMask Point
-	if (Mask != 0 && false)
+	if (Mask != 0) // && false)
 	{
 		cout << ipts.size() << " Ipoints before removal" << endl;
 
