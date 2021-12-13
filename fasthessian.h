@@ -98,7 +98,6 @@ class FastHessian {
 
 	static VTK_THREAD_RETURN_TYPE ThreadedRL (void *arg);
 
-	vtkMutexLock* Mutex;
 	int Current_thread_ID;
 	int Current_decile;
 
