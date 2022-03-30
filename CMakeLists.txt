@@ -1,7 +1,10 @@
 
 find_package(OpenCV REQUIRED)
-find_package(VTK REQUIRED)
 find_package( ZLIB REQUIRED )
+
+if(NOT DEFINED VTK_USE_FILE )
+find_package(VTK REQUIRED)
+endif(NOT DEFINED VTK_USE_FILE )
 
 include ("${VTK_USE_FILE}")
 
