@@ -9,6 +9,7 @@
 #include <vtkImageResample.h>
 #include <vtkImageLuminance.h>
 #include <vtkImageData.h>
+#include <vtkImageThreshold.h>
 #include <vtkMetaImageReader.h>
 #include <vtkNIFTIImageReader.h>
 #include <vtkImageReader2Factory.h>
@@ -43,6 +44,10 @@ int main( int argc, char *argv[] )
 	int numberOfThreads = -1;
 	int subVolumeRadius = 5;
 	char *pointFile = 0;
+	bool clampMinValues = false;
+	float clampMinValue = 0;
+	bool clampMaxValues = false;
+	float clampMaxValue = 0;
 
 	string outfilename("points");
 
@@ -58,8 +63,19 @@ int main( int argc, char *argv[] )
 		if (strcmp(key,"-s") == 0) {
 			spacing = atof(value);
 		}
+
 		if (strcmp(key,"-t") == 0) {
 			threshold = atof(value);
+		}
+
+		if (strcmp(key,"-cmin") == 0) {
+			clampMinValues = true;
+			clampMinValue = atof(value);
+		}
+
+		if (strcmp(key,"-cmax") == 0) {
+			clampMaxValues = true;
+			clampMaxValue = atof(value);
 		}
 
 		if (strcmp(key,"-m") == 0) {
@@ -152,11 +168,34 @@ int main( int argc, char *argv[] )
 			
 		if (mask->GetNumberOfScalarComponents() != 1)
 			{
-				cerr << "Too many composant for mask (>1)" << endl;
+				cerr << "Too many components for mask (>1)" << endl;
 				return 6;
 			}
 	}
-	
+
+	if ( clampMinValues ) {
+
+		vtkImageThreshold *threshold = vtkImageThreshold::New();
+		threshold->ReplaceOutOn();
+		threshold->ThresholdByUpper( clampMinValue );
+		threshold->SetOutValue( clampMinValue );
+		threshold->SetInputData( image );
+		threshold->Update();
+		image = threshold->GetOutput();
+
+	}
+
+	if ( clampMaxValues ) {
+
+		vtkImageThreshold *threshold = vtkImageThreshold::New();
+		threshold->ReplaceOutOn();
+		threshold->ThresholdByLower( clampMaxValue );
+		threshold->SetOutValue( clampMaxValue );
+		threshold->SetInputData( image );
+		threshold->Update();
+		image = threshold->GetOutput();
+	}
+
 	Timer->StopTimer();
 	cout << "Image loaded in " << Timer->GetElapsedTime() << "s" << endl;
 	
@@ -229,7 +268,6 @@ int main( int argc, char *argv[] )
 		cout << "csv written in " << Timer->GetElapsedTime() << "s" << endl;
 
 	}
-
 
 	if ( writeCSVGZ ) {
 
