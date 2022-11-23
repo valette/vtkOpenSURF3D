@@ -393,7 +393,7 @@ void vtk3DSURF::WritePoints(const char *fileName) {
 	root["origin"] = value(jorigin);
 	root["spacing"] = value(jspacing);
 	root["dimensions"] = value(jdimensions);
-	root["slices"] = value(datapoint);
+	root["points"] = value(datapoint);
 
 	ofstream pointsFile;
 	pointsFile.open(fileName, std::ofstream::out | std::ofstream::trunc);

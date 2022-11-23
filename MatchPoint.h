@@ -60,7 +60,7 @@ public:
 	void BboxParse(string bbox);
 	
 	
-	void WriteTransform(const char *fileName);
+	void WriteTransform(const char *fileName, bool writeInliers );
 
 	void setComputeBoundingBoxes(bool value) {
 		this->computeBoundingBoxes = value;
@@ -82,6 +82,7 @@ private:
 	Box3 bboxAmax, bboxBmax;
 	Box3 bboxAin, bboxBin;
 	int nbPointInA, nbPointInB;
+	std::vector< int > inliers;
 	bool useBBoxin;
 	bool computeBoundingBoxes;
 };

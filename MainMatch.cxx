@@ -19,6 +19,7 @@ int main( int argc, char *argv[] )
 			MatchingScale(1.5);
 
 	bool computeBoxes = false;
+	bool writeInliers = false;
 
 	// Parse optionnal arguments
 	int argumentsIndex = 3;
@@ -49,6 +50,10 @@ int main( int argc, char *argv[] )
 		if (strcmp(key, "-bb") == 0) {
 			bbox = string(value);
 		}
+		if (strcmp(key, "-i") == 0) {
+			writeInliers = true;
+			argumentsIndex -= 1;
+		}
 		
 		argumentsIndex += 2;
 	}
@@ -71,6 +76,6 @@ int main( int argc, char *argv[] )
 	cout << "compute Transform" << endl;
 	mp.computeTransform();
 	cout << "write JSON file" << endl;
-	mp.WriteTransform("transform.json");
+	mp.WriteTransform("transform.json", writeInliers );
 	cout<<endl;
 }

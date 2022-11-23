@@ -54,7 +54,7 @@ void MatchPoint::Parse(const char *fileName, int id) {
     d.spacing[1] = o["spacing"].get<picojson::array>()[1].get<double>();
     d.spacing[2] = o["spacing"].get<picojson::array>()[2].get<double>();
     
-    picojson::array a = o["slices"].get<picojson::array>();
+    picojson::array a = o["points"].get<picojson::array>();
     
 	int index = 0;
 	for (picojson::array::const_iterator j = a.begin(); j != a.end(); ++j) {
@@ -68,6 +68,7 @@ void MatchPoint::Parse(const char *fileName, int id) {
 		point.x 		= p["x"].get<double>();
 		point.y 		= p["y"].get<double>();
 		point.z 		= p["z"].get<double>();
+		point.id = index;
 		
 		picojson::array t = p["descriptor"].get<picojson::array>();
 		int desc_it = 0;
@@ -77,7 +78,8 @@ void MatchPoint::Parse(const char *fileName, int id) {
 		}
 
 		d.points.push_back(point);
-
+		index++;
+		std::cout << index << std::endl;
     }
     
     //transform to Real Coordonnate
@@ -210,8 +212,9 @@ void MatchPoint::computeTransform()
 	TooN::SIM3<double> Transform;
 	maxinlier = 0;
 	srand (1000);
-
-
+	int *bestInliers = new int[ 2 * matches.size() ];
+	int *currentInliers = new int[ 2 * matches.size() ];
+	
 	for (int i = 0; i < 8000 && fail < 10000 ; i++)
 	{
 		fail++;
@@ -244,7 +247,6 @@ void MatchPoint::computeTransform()
 
 
 		int inliers = 0;
-		int row = 0;
 		Box3 bboxA, bboxB;
 		TooN::SIM3<double> TransformInv = Transform.inverse();
 		
@@ -252,21 +254,23 @@ void MatchPoint::computeTransform()
 		TooN::Vector<3> pointB;
 
 		// - 2 - Calcul inliers
-		for (std::vector< std::pair<Ipoint, Ipoint> >::iterator it = matches.begin() ; it != matches.end() ; it++, row++)
+		for (auto it : matches )
 		{
 			//pointA = makeVector(it->first.x, it->first.y, it->first.z);
-			pointA[0] = it->first.x;
-			pointA[1] = it->first.y;
-			pointA[2] = it->first.z;
+			pointA[0] = it.first.x;
+			pointA[1] = it.first.y;
+			pointA[2] = it.first.z;
 			
 			//pointB = makeVector(it->second.x, it->second.y, it->second.z);
-			pointB[0] = it->second.x;
-			pointB[1] = it->second.y;
-			pointB[2] = it->second.z;
+			pointB[0] = it.second.x;
+			pointB[1] = it.second.y;
+			pointB[2] = it.second.z;
 			
 			//cout << TooN::norm( pointB - Transform*pointA ) << endl;
 			
 			if (TooN::norm( pointB - TransformInv*pointA ) < RansacDist) {
+				currentInliers[ 2 * inliers ] = it.first.id;
+				currentInliers[ 1 + 2 * inliers ] = it.second.id;
 				inliers++;
 				if (this->computeBoundingBoxes) {
 					bboxA.AddPoint(pointA);
@@ -279,27 +283,32 @@ void MatchPoint::computeTransform()
 		{
 			maxinlier = inliers;
 			BestTransform = TransformInv;
+			int *temp = currentInliers;
+			currentInliers = bestInliers;
+			bestInliers = temp;
 			bboxAmax = bboxA;
 			bboxBmax = bboxB;
 		}
 	}
+
 	nbPointInA = 0;
 	nbPointInB = 0;
 
-	for (std::vector< std::pair<Ipoint, Ipoint> >::iterator it = matches.begin() ; it != matches.end() ; it++)
-	{
-		if ( bboxAmax.ContainsPoint(it->first))
-				nbPointInA++;
-		if ( bboxBmax.ContainsPoint(it->second))
-				nbPointInB++;
+	for ( auto it : matches ) {
+
+		if ( bboxAmax.ContainsPoint( it.first ) ) nbPointInA++;
+		if ( bboxBmax.ContainsPoint( it.second ) ) nbPointInB++;
+
 	}
-	
-	
-	if (maxinlier < RansacMinInliers)
-		echec = true;
-		
+
+	if ( maxinlier < RansacMinInliers ) echec = true;
 	cout << "Max inliers : " << maxinlier << endl;
-		
+	this->inliers.clear();
+	for ( int i = 0; i < 2 * maxinlier; i++ )
+		this->inliers.push_back( bestInliers[ i ] );
+
+	delete [] bestInliers;
+	delete [] currentInliers;
 }
 
 
@@ -382,7 +391,7 @@ bool MatchPoint::getRT(std::map<int, std::pair<Ipoint, Ipoint>* > Pairs, TooN::S
 	return true;
 }
 
-void MatchPoint::WriteTransform(const char *fileName) {
+void MatchPoint::WriteTransform(const char *fileName, bool writeInliers) {
 
 	picojson::object bboxA;
 	picojson::object bboxB;
@@ -430,6 +439,23 @@ void MatchPoint::WriteTransform(const char *fileName) {
 	root["bboxB"]		= value(bboxB);
 	root["nbPointInA"]  = value((float)nbPointInA);
 	root["nbPointInB"]  = value((float)nbPointInB);
+
+	if ( writeInliers ) {
+
+		picojson::array allInliers;
+
+		for ( int i = 0; i < this->inliers.size() / 2; i++ ) {
+
+			picojson::array pair;
+			pair.push_back( value( ( double ) this->inliers[ 2 * i ] ) );
+			pair.push_back( value( ( double ) this->inliers[ 1 + 2 * i ] ) );
+			allInliers.push_back( value( pair ) );
+
+		}
+
+		root["allInliers"]  = value( allInliers );
+
+	}
 
 	ofstream pointsFile;
 	pointsFile.open(fileName, std::ofstream::out | std::ofstream::trunc);

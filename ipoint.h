@@ -75,6 +75,9 @@ public:
 
   //! Vector of descriptor components
   float *descriptor;
+
+  //! Point id
+  int id;
 };
 
 //-------------------------------------------------------
