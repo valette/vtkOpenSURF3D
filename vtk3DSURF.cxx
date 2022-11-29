@@ -364,10 +364,10 @@ void vtk3DSURF::WritePoints(const char *fileName) {
 	for (int i = 0; i != this->points.size(); i++) {
 			object iPoint;
 			Ipoint point = this->points[i];
-			iPoint["x"] = value(point.x);
-			iPoint["y"] = value(point.y);
-			iPoint["z"] = value(point.z);
-			iPoint["scale"] = value(point.scale);
+			iPoint["x"] = value(point.x * spacing[ 0 ] + origin[ 0 ]);
+			iPoint["y"] = value(point.y * spacing[ 1 ] + origin[ 1 ]);
+			iPoint["z"] = value(point.z * spacing[ 2 ] + origin[ 2 ]);
+			iPoint["scale"] = value(point.scale * Spacing);
 			iPoint["response"] = value (point.response);
 			iPoint["laplacian"] = value ((double)point.laplacian);
 			picojson::array descriptor;

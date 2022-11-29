@@ -81,15 +81,6 @@ void MatchPoint::Parse(const char *fileName, int id) {
 		index++;
 		std::cout << index << std::endl;
     }
-    
-    //transform to Real Coordonnate
-      for (IpVec::iterator it = d.points.begin() ; it != d.points.end(); ++it)
-      {
-		  it->x = it->x * d.spacing[0] + d.origin[0];
-		  it->y = it->y * d.spacing[1] + d.origin[1];
-		  it->z = it->z * d.spacing[2] + d.origin[2];
-		  it->scale = it->scale * d.spacing[0];
-	  }
 
 }
 
