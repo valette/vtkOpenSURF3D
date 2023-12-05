@@ -237,7 +237,7 @@ void vtk3DSURF::Update() {
 	if ( this->DescriptorType == 0 ) {
 
 		Surf Descriptors( this->IntegralData, this->points);
-		Descriptors.getDescriptors( this->SubVolumeRadius );
+		Descriptors.getDescriptors( this->SubVolumeRadius, this->Normalize );
 
 	} else if ( this->DescriptorType == 1 ) {
 

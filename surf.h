@@ -29,11 +29,11 @@ class Surf {
     Surf(vtkImageData *img, std::vector<Ipoint> &ipts);
 
     //! Describe all features in the supplied vector
-    void getDescriptors( int radius = 5 );
+    void getDescriptors( int radius = 5, bool normalize = true );
 
     //! Describe all raw features in the supplied vector
     void getRawDescriptors( int radius = 5 );
-  
+
   private:
     
     //---------------- Private Functions -----------------//
@@ -44,7 +44,7 @@ class Surf {
     //void getOrientation();
     
     //! Get the descriptor. See Agrawal ECCV 08
-    void getDescriptor(int id, int radius);
+    void getDescriptor(int id, int radius, bool normalize);
 
     //! Get the raw descriptor.
     void getRawDescriptor(int id, int radius);

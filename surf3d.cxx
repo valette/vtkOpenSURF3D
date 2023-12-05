@@ -48,6 +48,7 @@ int main( int argc, char *argv[] )
 	float clampMinValue = 0;
 	bool clampMaxValues = false;
 	float clampMaxValue = 0;
+	bool normalize = true;
 
 	string outfilename("points");
 
@@ -121,6 +122,10 @@ int main( int argc, char *argv[] )
 
 		if (strcmp(key,"-r") == 0) {
 			subVolumeRadius = atoi(value);
+		}
+
+		if (strcmp(key,"-normalize") == 0) {
+			normalize = atoi(value);
 		}
 
 		argumentsIndex += 2;
@@ -202,6 +207,7 @@ int main( int argc, char *argv[] )
 	vtk3DSURF *SURF = vtk3DSURF::New();
 	SURF->SetInput(image);
 	SURF->SetNbThread(24);
+	SURF->SetNormalize(normalize);
 	SURF->SetMaxSize(maxSize);
 	SURF->SetSpacing(spacing);
 	SURF->SetThreshold(threshold);

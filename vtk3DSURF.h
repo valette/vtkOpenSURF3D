@@ -39,6 +39,9 @@ public :
 	void WritePointsCSVGZ(const char *fileName);
 	void WritePointsBinary(const char *fileName);
 
+	vtkSetMacro(Normalize, bool)
+	vtkGetMacro(Normalize, bool)
+
 	vtkSetMacro(PointFile, char*)
 	vtkGetMacro(PointFile, char*)
 
@@ -89,12 +92,14 @@ protected :
 	int SubVolumeRadius;
 	int NumberOfPoints;
 	char *PointFile;
+	bool Normalize;
 
 	/// the constructor
 	vtk3DSURF() {
 		this->Cast = 0;
 		this->IntegralData = 0;
 		this->Mask = 0;
+		this->Normalize = true;
 		this->Threshold = 0.0004;
 		this->NbThread = -1;
 		this->MaxSize = 100;

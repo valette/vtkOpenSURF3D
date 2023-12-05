@@ -37,11 +37,11 @@ Surf::Surf(vtkImageData *img, IpVec &ipts)
 //-------------------------------------------------------
 
 //! Describe all features in the supplied vector
-void Surf::getDescriptors( int radius )
+void Surf::getDescriptors( int radius, bool normalize )
 {
   #pragma omp parallel for
   for (int i = 0; i < ipts.size(); ++i)
-    this->getDescriptor(i, radius);
+    this->getDescriptor(i, radius, normalize);
 
   return;
 }
@@ -60,7 +60,7 @@ void Surf::getRawDescriptors( int radius )
 
 //! Get the modified descriptor. See Agrawal ECCV 08
 //! Modified descriptor contributed by Pablo Fernandez
-void Surf::getDescriptor(int id, int radius)
+void Surf::getDescriptor(int id, int radius, bool normalize)
 {
   int y, x, z, sample_x, sample_y, sample_z, count=0;
   int i, j, k, xs, ys, zs;
@@ -146,6 +146,8 @@ void Surf::getDescriptor(int id, int radius)
     }
     i += radius;
   }
+
+  if ( !normalize ) return;
 
   //Convert to Unit Vector
   len = sqrt(len);
