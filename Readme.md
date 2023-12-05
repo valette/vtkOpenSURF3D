@@ -45,7 +45,7 @@ Available options:
  * -bin 0/1 : write points as bin file. Default : 0
  * -csvgz 0/1 : write points as csv.gz file. Default : 1
  * -n number : maximum number of points
- * -norm 0/1 : normalize descriptors (default : 1 )
+ * -normalize 0/1 : normalize descriptors (default : 1 )
  * -r radius : descriptor volume radius. Default : 5
  * -type 0/1/2 : descriptor type : 
 	* 0 : SURF3D descriptor (default). Descriptor size : 48
