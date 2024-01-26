@@ -107,6 +107,7 @@ protected :
 		this->NumberOfPoints = -1;
 		this->PointFile = 0;
 		this->Resized = 0;
+		this->Spacing = 0;
 		this->SubVolumeRadius = 5;
 	}
 
