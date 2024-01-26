@@ -12,6 +12,7 @@
 #include <vtkNIFTIImageReader.h>
 #include <vtkObjectFactory.h>
 
+// v3 : read both QForm and SForm matrices
 // v2 : shift and scale values read by nifti reader when needed
 // v1
 
@@ -88,16 +89,19 @@ public :
 		if (strcmp (Reader->GetClassName(), "vtkNIFTIImageReader") == 0) {
 		    vtkNIFTIImageReader *niftiReader = (vtkNIFTIImageReader *) Reader;
 
-            vtkMatrix4x4 *qForm = niftiReader->GetQFormMatrix();
-			if (!qForm) {
-                qForm = vtkMatrix4x4::New();
+            vtkMatrix4x4 *formMatrix = niftiReader->GetQFormMatrix();
+			if (!formMatrix) {
+				formMatrix = niftiReader->GetSFormMatrix();
+				if (!formMatrix) {
+					formMatrix = vtkMatrix4x4::New();
+				}
             }
 
             for (int i = 0; i < 3; i++) {
-				if (qForm->GetElement(i, i) < 0) {
+				if (formMatrix->GetElement(i, i) < 0) {
 					flip[i] = true;
 				}
-				Origin[i] = qForm->GetElement(i,3);
+				Origin[i] = formMatrix->GetElement(i,3);
 			}
 
 
