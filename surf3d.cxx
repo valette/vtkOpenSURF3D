@@ -27,6 +27,23 @@ int main( int argc, char *argv[] )
 	
 	if (argc < 2) {
 		cout << "Usage : surf3d file [options]" << endl;
+		cout << "Available options:" << endl;
+		cout << "-bin 0/1       : write points as bin file. Default : 0" << endl;
+		cout << "-csv 0/1       : write points as csv file. Default : 0" << endl;
+		cout << "-cmin value    : clamp values lower than specified value" << endl;
+		cout << "-cmax value    : clamp values larger than specified value" << endl;
+		cout << "-csvgz 0/1     : write points as csv.gz file. Default : 1" << endl;
+		cout << "-json 0/1      : write points as json file. Default : 0" << endl;
+		cout << "-n number      : maximum number of points" << endl;
+		cout << "-normalize 0/1 : normalize descriptors (default : 1 )" << endl;
+		cout << "-o basename    : set output file name. Default: \"points\"" << endl;
+		cout << "-r radius      : descriptor volume radius. Default : 5" << endl;
+		cout << "-s spacing     : resample input image to isotropic sampling with given spacing" << endl;
+		cout << "-t threshold   : set detector threshold. Default: 0" << endl;
+		cout << "-type 0/1/2    : set descriptor type :" << endl;
+		cout << "       0 : SURF3D descriptor (default). Descriptor size : 48" << endl;
+		cout << "       1 : subvolume HAAR coefficients. Descriptor size : 24 * radius^3" << endl;
+		cout << "       2 : subvolume raw voxels. Descriptor size : 8 * radius^3" << endl;
 		exit(1);
 	}
 
