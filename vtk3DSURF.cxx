@@ -1,6 +1,7 @@
 #include <sstream>
 #include <vector>
 #include <map>
+#include <vtkBoundingBox.h>
 #include <vtkObjectFactory.h>
 #include <vtkTimerLog.h>
 #include <vtkMultiThreader.h>
@@ -11,7 +12,7 @@
 #include <vtkImageLuminance.h>
 #include <vtkImageResize.h>
 #include <vtkMetaImageWriter.h>
-
+#include <vtkNew.h>
 #include "vtk3DSURF.h"
 #include "integral.h"
 #include <vtkVersion.h>
@@ -37,9 +38,11 @@ void vtk3DSURF::ReadIPoints() {
 	std::cout << "Read : " << this->PointFile << std::endl;
 	ifstream file( this->PointFile );
 
-	double origin[ 3 ], spacing[ 3 ];
+	double origin[ 3 ], spacing[ 3 ], bounds[ 6 ];
+	vtkBoundingBox box;
 	this->Cast->GetOrigin( origin );
 	this->Cast->GetSpacing( spacing );
+	box.SetBounds( this->Cast->GetBounds() );
 	double Sspacing = pow( spacing[ 0 ] * spacing[ 1 ] * spacing[ 2 ], 1.0 / 3.0 );
 
     while( std::getline( file, line ) ) {
@@ -49,17 +52,20 @@ void vtk3DSURF::ReadIPoints() {
 
 		Ipoint point;
 		if ( !std::getline( lineStream, cell, ',' ) ) continue;
-		float temp;
-		temp = std::stof( cell );
-		point.x = ( temp - origin[ 0 ] ) / spacing[ 0 ];
+		float x = std::stof( cell );
+		point.x = ( x - origin[ 0 ] ) / spacing[ 0 ];
 		std::getline( lineStream, cell, ',' );
-		temp = std::stof( cell );
-		point.y = ( temp - origin[ 1 ] ) / spacing[ 1 ];
+		float y = std::stof( cell );
+		point.y = ( y - origin[ 1 ] ) / spacing[ 1 ];
 		std::getline( lineStream, cell, ',' );
-		temp = std::stof( cell );
-		point.z = ( temp - origin[ 2 ] ) / spacing[ 2 ];
+		float z = std::stof( cell );
+		point.z = ( z - origin[ 2 ] ) / spacing[ 2 ];
 		std::getline( lineStream, cell, ',' );
 		point.scale = std::stof( cell ) / Sspacing;
+		if ( !box.ContainsPoint( x, y, z ) ) {
+			std::cout << "Error : point " << this->points.size();
+			std::cout << " with coordinates : " << point.x << " " << point.y << " " << point.z << " is outside image" << std::endl;
+		}
 		this->points.push_back( point );
 
     }
@@ -182,7 +188,7 @@ void vtk3DSURF::Update() {
 
 	Timer->StartTimer();
 
-	this->IntegralData = Integral(Cast);
+	this->Integral = ComputeIntegral(Cast);
 
 	Timer->StopTimer();
 
@@ -194,7 +200,7 @@ void vtk3DSURF::Update() {
 	//Sample : un peu de subsampling (mais pas pour tout : response layer & interpolation)
 
 	//													octave	interval	sample
-	FastHessian hessian(this->IntegralData, this->points, 	4, 		4, 			2, 			this->Threshold);
+	FastHessian hessian(this->Integral, this->points, 	4, 		4, 			2, 			this->Threshold);
 
 	if (Mask != 0)
 		hessian.setMask(Mask);
@@ -236,12 +242,12 @@ void vtk3DSURF::Update() {
 
 	if ( this->DescriptorType == 0 ) {
 
-		Surf Descriptors( this->IntegralData, this->points);
+		Surf Descriptors( this->Integral, this->points);
 		Descriptors.getDescriptors( this->SubVolumeRadius, this->Normalize );
 
 	} else if ( this->DescriptorType == 1 ) {
 
-		Surf Descriptors( this->IntegralData, this->points);
+		Surf Descriptors( this->Integral, this->points);
 		Descriptors.getRawDescriptors( this->SubVolumeRadius );
 
 	} else if ( this->DescriptorType == 2 ) {
@@ -259,6 +265,16 @@ void vtk3DSURF::Update() {
 	Timer->StopTimer();
 	cout << "Descriptors computed in " <<
 	Timer->GetElapsedTime() << "s" << endl;
+	float min, max;
+	min = max = points[ 0 ].descriptor[ 0 ];
+	for ( const auto &point : this->points )
+		for ( int i = 0; i < point.size; i++ ) {
+			float value = point.descriptor[ i ];
+			if ( max < value ) max = value;
+			if ( min > value ) min = value;
+		}
+
+	std::cout << "Descriptor range : [" << min << ", " << max << "]" << std::endl;
 
 #ifdef DEBUG
 	int rs = 0;
@@ -268,7 +284,7 @@ void vtk3DSURF::Update() {
 				rs += *static_cast<int*>(this->Cast->GetScalarPointer(x, y, z));
 
 		cout << "rs = " << rs << endl;
-		cout << "int= " << BoxIntegral(this->IntegralData, 20, 30, 40, 20, 30, 40) << endl;
+		cout << "int= " << BoxIntegral(this->Integral, 20, 30, 40, 20, 30, 40) << endl;
 #endif
 
 }
@@ -436,7 +452,7 @@ void vtk3DSURF::WritePointsCSV(const char *fileName) {
 	pointsFile.close();
 }
 
-void vtk3DSURF::WritePointsCSVGZ(const char *fileName) {
+void vtk3DSURF::WritePointsCSVGZ(const char *fileName, const char *gzOpts) {
 
 	double origin[ 3 ];
 	double spacing[ 3 ];
@@ -447,8 +463,10 @@ void vtk3DSURF::WritePointsCSVGZ(const char *fileName) {
 	this->Cast->GetDimensions( dimensions );
 
 	double Sspacing = pow( spacing[ 0 ] * spacing[ 1 ] * spacing[ 2 ], 1.0 / 3.0 );
+	string opts( "w" );
+	if ( gzOpts ) opts += gzOpts;
 
-	gzFile gz = gzopen( fileName, "w" );
+	gzFile gz = gzopen( fileName, opts.c_str() );
 
 	for ( int i = 0; i != this->points.size(); i++) {
 

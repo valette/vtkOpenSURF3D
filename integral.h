@@ -27,7 +27,7 @@ using namespace std;
 
 typedef unsigned long long int ulli;
 
-vtkImageData *Integral(vtkImageData *img);
+vtkImageData *ComputeIntegral(vtkImageData *img);
 VTK_THREAD_RETURN_TYPE ThreadedIntegral (void *arg);
 
 

@@ -1,26 +1,18 @@
-#include <sstream>
-#include <vector>
-#include <map>
-#include <vtkObjectFactory.h>
-#include <vtkTimerLog.h>
-#include <vtkMultiThreader.h>
-#include <vtkMetaImageWriter.h>
-#include <vtkImageShiftScale.h>
-#include <vtkImageResample.h>
-#include <vtkImageLuminance.h>
-#include <vtkImageData.h>
-#include <vtkImageThreshold.h>
-#include <vtkMetaImageReader.h>
-#include <vtkNIFTIImageReader.h>
-#include <vtkImageReader2Factory.h>
 #include <string>
-#include "integral.h"
+#include <vtkTimerLog.h>
+#include <vtkImageData.h>
+#include <vtkImageReader2Factory.h>
+#include <vtkImageMirrorPad.h>
+#include <vtkImageThreshold.h>
+#include <vtkImageTranslateExtent.h>
+#include <vtkMetaImageReader.h>
+#include <vtkMetaImageWriter.h>
+#include <vtkNew.h>
+#include <vtkSmartPointer.h>
+
 #include "vtk3DSURF.h"
 #include "vtkRobustImageReader.h"
 #include "picojson.h"
-
-using namespace std;
-
 
 int main( int argc, char *argv[] )
 {
@@ -59,6 +51,7 @@ int main( int argc, char *argv[] )
 	int descriptorType = 0;
 	int numberOfPoints = -1;
 	int numberOfThreads = -1;
+	int pad = 0;
 	int subVolumeRadius = 5;
 	char *pointFile = 0;
 	bool clampMinValues = false;
@@ -66,6 +59,7 @@ int main( int argc, char *argv[] )
 	bool clampMaxValues = false;
 	float clampMaxValue = 0;
 	bool normalize = true;
+	char *gzOpts = 0;
 
 	string outfilename("points");
 
@@ -145,29 +139,37 @@ int main( int argc, char *argv[] )
 			normalize = atoi(value);
 		}
 
+		if (strcmp(key,"-pad") == 0) {
+			pad = atoi(value);
+		}
+
+		if (strcmp(key,"-gz") == 0) {
+			gzOpts = value;
+		}
+
 		argumentsIndex += 2;
 	}
 
 	cout << "load : " << argv[1] << endl;
 	
-	vtkTimerLog *Timer = vtkTimerLog::New();
+	vtkNew<vtkTimerLog> Timer;
 	Timer->StartTimer();
 
-    vtkRobustImageReader *imageReader = vtkRobustImageReader::New();
+    vtkNew<vtkRobustImageReader> imageReader;
 	imageReader->SetFileName(argv[1]) ;
 	imageReader->Update() ;
-	vtkImageData *image = imageReader->GetOutput();
-	vtkImageData *mask = 0;
-	
+	vtkSmartPointer<vtkImageData> image = imageReader->GetOutput();
+	vtkSmartPointer<vtkImageData> mask;
+
 	if (bmask)
 	{
 			// Create image reader factory and register Meta image reader with it
-		vtkImageReader2Factory *maskReaderFactory = vtkImageReader2Factory::New();
-		vtkMetaImageReader *metamaskReader = vtkMetaImageReader::New();
+		vtkNew<vtkImageReader2Factory> maskReaderFactory;
+		vtkNew<vtkMetaImageReader> metamaskReader;
 		maskReaderFactory->RegisterReader(metamaskReader);
 		
 		// Create a reader for image and try to load it
-		vtkImageReader2* maskReader = maskReaderFactory->CreateImageReader2(maskfilename) ;
+		vtkSmartPointer<vtkImageReader2> maskReader = maskReaderFactory->CreateImageReader2(maskfilename) ;
 		if (!maskReader) {
 			cerr << "Cannot load file " << argv[1] << " as an mask file; terminating.\n" ;
 			return 5 ;
@@ -195,9 +197,35 @@ int main( int argc, char *argv[] )
 			}
 	}
 
+	if ( pad ) {
+		std::cout << "Apply mirror padding, with padding = " << pad << std::endl;
+		int dimensions[ 3 ];
+		double spacing[ 3 ];
+		image->GetDimensions( dimensions );
+		image->GetSpacing( spacing );
+		vtkNew<vtkImageMirrorPad> padding;
+		padding->SetInputData( image );
+		int p[ 3 ];
+		for ( int i = 0; i < 3; i++ ) p[ i ] = ceil( pad / spacing[ i ] );
+		std::cout << "Voxel padding = " << p[ 0 ] << " " << p[ 1 ] << " " << p[ 2 ] << std::endl;
+		padding->SetOutputWholeExtent( -p[ 0 ], dimensions[ 0 ] + p[ 0 ],
+			-p[ 1 ], dimensions[ 1 ] + p[ 1 ], -p[ 2 ], dimensions[ 2 ] + p[ 2 ] );
+		padding->Update();
+		vtkNew<vtkImageTranslateExtent> translate;
+		translate->SetInputData( padding->GetOutput() );
+		translate->SetTranslation( p[ 0 ], p[ 1 ], p[ 2 ] );
+		translate->Update();
+		image = translate->GetOutput();
+	}
+
+//	vtkNew<vtkMetaImageWriter> writer;
+//	writer->SetInputData( image );
+//	writer->SetFileName( "test.mhd" );
+//	writer->Write();
+
 	if ( clampMinValues ) {
 
-		vtkImageThreshold *threshold = vtkImageThreshold::New();
+		vtkNew<vtkImageThreshold> threshold;
 		threshold->ReplaceOutOn();
 		threshold->ThresholdByUpper( clampMinValue );
 		threshold->SetOutValue( clampMinValue );
@@ -209,7 +237,7 @@ int main( int argc, char *argv[] )
 
 	if ( clampMaxValues ) {
 
-		vtkImageThreshold *threshold = vtkImageThreshold::New();
+		vtkNew<vtkImageThreshold> threshold;
 		threshold->ReplaceOutOn();
 		threshold->ThresholdByLower( clampMaxValue );
 		threshold->SetOutValue( clampMaxValue );
@@ -221,7 +249,7 @@ int main( int argc, char *argv[] )
 	Timer->StopTimer();
 	cout << "Image loaded in " << Timer->GetElapsedTime() << "s" << endl;
 	
-	vtk3DSURF *SURF = vtk3DSURF::New();
+	vtkNew<vtk3DSURF> SURF;
 	SURF->SetInput(image);
 	SURF->SetNbThread(24);
 	SURF->SetNormalize(normalize);
@@ -295,7 +323,7 @@ int main( int argc, char *argv[] )
 	if ( writeCSVGZ ) {
 
 		Timer->StartTimer();
-		SURF->WritePointsCSVGZ( (outfilename+".csv.gz").c_str() );
+		SURF->WritePointsCSVGZ( (outfilename+".csv.gz").c_str(), gzOpts );
 		Timer->StopTimer();
 		cout << "csvgz written in " << Timer->GetElapsedTime() << "s" << endl;
 

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <vtkImageData.h>
+#include <vtkSmartPointer.h>
 #include "ipoint.h"
 
 using namespace std;
@@ -15,20 +16,15 @@ public :
 	static vtk3DSURF *New();
 	vtkTypeMacro(vtk3DSURF, vtkObject);
 
-	void SetInput(vtkImageData *Input) {
-		this->Input = Input;
-	};
-	
-	void SetMask(vtkImageData *Mask) {
-		this->Mask = Mask;
-	};
+	vtkSetMacro(Input, vtkImageData*)
+	vtkSetMacro(Mask, vtkImageData*)
 
 	vtkImageData *GetTransformedInput() {
 		return this->Cast;
 	}
 	
 	vtkImageData *GetIntegral() {
-		return this->IntegralData;
+		return this->Integral;
 	}
 
 	void Update();
@@ -36,7 +32,7 @@ public :
 	void WritePoints(const char *fileName);
 
 	void WritePointsCSV(const char *fileName);
-	void WritePointsCSVGZ(const char *fileName);
+	void WritePointsCSVGZ(const char *fileName, const char *gzOpts);
 	void WritePointsBinary(const char *fileName);
 
 	vtkSetMacro(Normalize, bool)
@@ -75,14 +71,7 @@ protected :
 
 	vector<Ipoint> points;
 
-	vtkImageData *Input;
-
-	vtkImageData *Mask;
-	
-	vtkImageData *Cast;
-	vtkImageData *Resized;
-	
-	vtkImageData *IntegralData;
+	vtkSmartPointer<vtkImageData> Input, Mask, Cast, Resized, Integral;
 
 	double Threshold;
 	int NbThread;
@@ -96,9 +85,6 @@ protected :
 
 	/// the constructor
 	vtk3DSURF() {
-		this->Cast = 0;
-		this->IntegralData = 0;
-		this->Mask = 0;
 		this->Normalize = true;
 		this->Threshold = 0.0004;
 		this->NbThread = -1;
@@ -106,24 +92,12 @@ protected :
 		this->DescriptorType = 0;
 		this->NumberOfPoints = -1;
 		this->PointFile = 0;
-		this->Resized = 0;
 		this->Spacing = 0;
 		this->SubVolumeRadius = 5;
 	}
 
 	/// the destructor
-	 ~vtk3DSURF() {
-		if (this->IntegralData) {
-			this->IntegralData->Delete();
-		}
-		if (this->Cast) {
-			this->Cast->Delete();
-		}
-
-		if (this->Mask) {
-			this->Mask->Delete();
-		}
-	}
+	 ~vtk3DSURF() {}
 
 };
 #endif

@@ -15,7 +15,7 @@ typedef struct {
 } ThreadData;
 
 
-vtkImageData *Integral(vtkImageData *source) {
+vtkImageData *ComputeIntegral(vtkImageData *source) {
 
 	vtkImageData *integral = vtkImageData::New();
 

@@ -261,8 +261,9 @@ inline float Surf::haarZ(int x, int y, int z, int s)
 //! Calculate Haar wavelet responses in x direction
 inline float Surf::haarXOptim(int x, int y, int z, int s)
 {
-  return (long long)BoxIntegralOptim(img, 	x, 		y-s/2,	z-s/2,	s/2, s, s, incs, dims, pin_tegral)
-    - (long long)BoxIntegralOptim(img, 		x-s/2, 	y-s/2,	z-s/2, 	s/2, s, s, incs, dims, pin_tegral);
+  
+  return (long long)BoxIntegralOptim(img, x, y-s/2, z-s/2, s/2, s, s, incs, dims, pin_tegral)
+  - (long long) BoxIntegralOptim(img, x-s/2, y-s/2, z-s/2, s/2, s, s, incs, dims, pin_tegral);
 }
 
 //-------------------------------------------------------
