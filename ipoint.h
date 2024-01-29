@@ -33,11 +33,6 @@ class Ipoint {
 
 public:
 
-  //! Destructor
-  ~Ipoint() {
- //   if (descriptor) delete descriptor;
-  };
-
   //! Constructor
   Ipoint() : orientation(0), descriptor(0), response(0), laplacian(0), scale(0), size(0) {};
 
@@ -52,7 +47,7 @@ public:
 
   void allocate( int size ) {
 	  this->size = size;
-	  this->descriptor = new float[ size ];
+	  this->descriptor.resize( size );
   }
 
   //! Coordinates of the detected interest point
@@ -74,7 +69,8 @@ public:
   int size;
 
   //! Vector of descriptor components
-  float *descriptor;
+//  float *descriptor;
+  std::vector< float > descriptor;
 
   //! Point id
   int id;

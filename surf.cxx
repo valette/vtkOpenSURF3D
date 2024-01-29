@@ -75,7 +75,7 @@ void Surf::getDescriptor(int id, int radius, bool normalize)
   y = fRound(ipt->y);
   z = fRound(ipt->z);
   ipt->allocate(48);
-  float *desc = ipt->descriptor;
+  float *desc = &ipt->descriptor[ 0 ];
   float halfRadius = (float ) ( radius - 1.0 ) / 2.0;
 
   i = -radius; //-10
@@ -171,7 +171,7 @@ void Surf::getRawDescriptor(int id, int radius)
   y = fRound(ipt->y);
   z = fRound(ipt->z);
   ipt->allocate( 3 * 8 * radius * radius * radius );
-  float *desc = ipt->descriptor;
+  float *desc = &ipt->descriptor[ 0 ];
 
   i = -radius; //-10
 

@@ -12,6 +12,7 @@
 #include <vtkImageData.h>
 #include <vtkMultiThreader.h>
 #include <vtkTimerLog.h>
+#include <vtkNew.h>
 #include <vtkMetaImageWriter.h>
 #include <vtkType.h>
 
@@ -146,7 +147,7 @@ void FastHessian::getIpoints()
   //ipts.clear();
 
 
-	vtkTimerLog *Timer = vtkTimerLog::New();
+	vtkNew<vtkTimerLog> Timer;
 
 	Timer->StartTimer();
   // Build the response map

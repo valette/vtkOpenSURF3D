@@ -74,7 +74,7 @@ void vtk3DSURF::ReadIPoints() {
 
 void vtk3DSURF::Update() {
 
-	vtkTimerLog *Timer = vtkTimerLog::New();
+	vtkNew<vtkTimerLog> Timer;
 
 	int dimensions[3];
 	Input->GetDimensions(dimensions);
@@ -85,11 +85,10 @@ void vtk3DSURF::Update() {
 
 	if (temp->GetNumberOfScalarComponents() >= 3) {
 		cout << "Image has several components, converting..." << endl;
-		vtkImageLuminance *luminance = vtkImageLuminance::New();
+		vtkNew<vtkImageLuminance> luminance;
 		luminance->SetInputData(temp);
 		luminance->Update();
-		temp->DeepCopy(luminance->GetOutput());
-		luminance->Delete();
+		temp = luminance->GetOutput();
 	}
 
 	double originspacing[3];
@@ -129,7 +128,7 @@ void vtk3DSURF::Update() {
 			newSpacing = (double) lmin2 / MaxSize;
 		}
 
-		vtkImageResample *resample = vtkImageResample::New();
+		vtkNew<vtkImageResample> resample;
 		resample->SetInputData(temp);
 		for (int i = 0; i != 3; i++) {
 			resample->SetAxisOutputSpacing(i, newSpacing);
@@ -147,7 +146,7 @@ void vtk3DSURF::Update() {
 		if (Mask != 0)
 		{
 			vtkImageData* temp2;
-			vtkImageResample *resamplemask = vtkImageResample::New();
+			vtkNew<vtkImageResample> resamplemask;
 			resamplemask->SetInputData(Mask);
 			resamplemask->SetInterpolationModeToNearestNeighbor();
 			for (int i = 0; i != 3; i++)
@@ -155,27 +154,23 @@ void vtk3DSURF::Update() {
 			if (this->NbThread > 0)
 				resamplemask->SetNumberOfThreads(NbThread);
 			resamplemask->Update();
-			temp2 = resamplemask->GetOutput();
-			this->Mask = temp2;
-			temp2->Register(this);
+			this->Mask = resamplemask->GetOutput();
 		}
 
 	}
 
-	vtkImageCast *imageCast = vtkImageCast::New();
+	vtkNew<vtkImageCast> imageCast;
 	imageCast->SetClampOverflow(1);
 	imageCast->SetInputData(temp);
 	imageCast->SetOutputScalarTypeToInt ();
 	if (this->NbThread > 0) imageCast->SetNumberOfThreads(NbThread);
 	imageCast->Update();
 	this->Resized = imageCast->GetOutput();
-	this->Resized->Register(this);
-	imageCast->Delete();
 
 	double Range[2];
 	temp->GetScalarRange(Range);
 	cout << "Range " << Range[0] << " " <<  Range[1] << " " << " " << endl;
-	vtkImageShiftScale *Shift = vtkImageShiftScale::New();
+	vtkNew<vtkImageShiftScale> Shift;
 	Shift->SetClampOverflow(1);
 	Shift->SetInputData( this->Resized );
 	Shift->SetOutputScalarTypeToInt ();
@@ -183,12 +178,10 @@ void vtk3DSURF::Update() {
 	if (this->NbThread > 0) Shift->SetNumberOfThreads(NbThread);
 	Shift->Update();
 	this->Cast = Shift->GetOutput();
-	this->Cast->Register( this );
-	Shift->Delete();
 
 	Timer->StartTimer();
 
-	this->Integral = ComputeIntegral(Cast);
+	this->Integral =  vtkSmartPointer<vtkImageData>::Take(ComputeIntegral(Cast));
 
 	Timer->StopTimer();
 
@@ -252,14 +245,13 @@ void vtk3DSURF::Update() {
 
 	} else if ( this->DescriptorType == 2 ) {
 
-		vtkMultiThreader *Threader = vtkMultiThreader::New();
+		vtkNew<vtkMultiThreader> Threader;
 		if (this->NbThread > 0) {
 			Threader->SetNumberOfThreads(NbThread);
 		}
         Threader->SetSingleMethod (ThreadedSubVolumes, (void *) this);
         Timer->StartTimer();
         Threader->SingleMethodExecute ();
-        Threader->Delete();
     }
 
 	Timer->StopTimer();
@@ -298,7 +290,7 @@ VTK_THREAD_RETURN_TYPE vtk3DSURF::ThreadedSubVolumes (void *arg) {
 	int NumberOfThreads = Info->NumberOfThreads;
 	const int radius = self->SubVolumeRadius;
 	const int size = 8 * radius * radius * radius;
-	vtkImageResize * resize = vtkImageResize::New();
+	vtkNew<vtkImageResize> resize;
 	resize->SetInputData(self->Resized);
 	resize->SetResizeMethodToOutputDimensions ();
 	resize->SetOutputDimensions( 2 * radius, 2 * radius, 2 * radius );
@@ -342,7 +334,7 @@ VTK_THREAD_RETURN_TYPE vtk3DSURF::ThreadedSubVolumes (void *arg) {
 			cout<<"spaacing : " << sp[0] << " " << sp[1] << " " << sp[2]<< endl;
 			resize->GetOutput()->GetOrigin(ori );
 			cout<<"Origin: " << ori[0] << " " << ori[1] << " " << ori[2]<< endl;
-			vtkMetaImageWriter *writer = vtkMetaImageWriter::New();
+			vtkNew<vtkMetaImageWriter> writer;
 			std::stringstream strfile;
 			float coords[3];
 			for (int i=0; i < 3; i++) coords[i] =  ori[i] + radius *sp[i];
@@ -355,13 +347,11 @@ VTK_THREAD_RETURN_TYPE vtk3DSURF::ThreadedSubVolumes (void *arg) {
 			writer->SetInputData( output );
 			writer->SetFileName( strfile.str().c_str() );
 			writer->Write();
-			writer->Delete();
 		}
 #endif
 
 	}
 
-	resize->Delete();
 	return (VTK_THREAD_RETURN_VALUE);
 
 }
@@ -379,7 +369,7 @@ void vtk3DSURF::WritePoints(const char *fileName) {
 	picojson::array datapoint;
 	for (int i = 0; i != this->points.size(); i++) {
 			object iPoint;
-			Ipoint point = this->points[i];
+			Ipoint &point = this->points[i];
 			iPoint["x"] = value(point.x * spacing[ 0 ] + origin[ 0 ]);
 			iPoint["y"] = value(point.y * spacing[ 1 ] + origin[ 1 ]);
 			iPoint["z"] = value(point.z * spacing[ 2 ] + origin[ 2 ]);
@@ -434,7 +424,7 @@ void vtk3DSURF::WritePointsCSV(const char *fileName) {
 	pointsFile.open(fileName, std::ofstream::out | std::ofstream::trunc);
 		
 	for (int i = 0; i != this->points.size(); i++) {
-		Ipoint point = this->points[i];
+		Ipoint &point = this->points[i];
 		
 		pointsFile <<  point.x * spacing[0] + origin[0] << ",";
 		pointsFile <<  point.y * spacing[1] + origin[1] << ",";
@@ -470,7 +460,7 @@ void vtk3DSURF::WritePointsCSVGZ(const char *fileName, const char *gzOpts) {
 
 	for ( int i = 0; i != this->points.size(); i++) {
 
-		Ipoint point = this->points[ i ];
+		Ipoint &point = this->points[ i ];
 		gzprintf( gz, "%f,", point.x * spacing[ 0 ] + origin[ 0 ] );
 		gzprintf( gz, "%f,", point.y * spacing[ 1 ] + origin[ 1 ] );
 		gzprintf( gz, "%f,", point.z * spacing[ 2 ] + origin[ 2 ] );
@@ -518,7 +508,7 @@ void vtk3DSURF::WritePointsBinary(const char *fileName) {
 	float valF;
 
 	for (int i = 0; i != this->points.size(); i++) {
-		Ipoint point = this->points[i];
+		Ipoint &point = this->points[i];
 		
 		valF =  point.x * spacing[0] + origin[0];
 		fwrite(&valF, sizeof(float), 1, file);

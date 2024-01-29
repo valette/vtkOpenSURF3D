@@ -1,15 +1,17 @@
 
 #include "integral.h"
 
+#include <vtkNew.h>
 #include <vtkImageData.h>
+#include <vtkSmartPointer.h>
 #include <vtkTimerLog.h>
 //#define DEBUG
 
 
 typedef struct {
 
-	vtkImageData *source;
-	vtkImageData *integral;
+	vtkSmartPointer<vtkImageData> source;
+	vtkSmartPointer<vtkImageData> integral;
 	int ThreadedComputationType;
 
 } ThreadData;
@@ -35,9 +37,9 @@ vtkImageData *ComputeIntegral(vtkImageData *source) {
 	data.source = source;
 	data.integral = integral;
 
-	vtkTimerLog *Timer = vtkTimerLog::New();
+	vtkNew<vtkTimerLog> Timer;
 
-	vtkMultiThreader *Threader = vtkMultiThreader::New();
+	vtkNew<vtkMultiThreader> Threader;
 	Threader->SetSingleMethod (ThreadedIntegral, (void *) &data);
 
 	Timer->StartTimer();

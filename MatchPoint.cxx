@@ -79,7 +79,6 @@ void MatchPoint::Parse(const char *fileName, int id) {
 
 		d.points.push_back(point);
 		index++;
-		std::cout << index << std::endl;
     }
 
 }

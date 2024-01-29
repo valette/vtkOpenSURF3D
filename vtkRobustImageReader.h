@@ -9,8 +9,10 @@
 #include <vtkImageShiftScale.h>
 #include <vtkMatrix4x4.h>
 #include <vtkMetaImageReader.h>
+#include <vtkNew.h>
 #include <vtkNIFTIImageReader.h>
 #include <vtkObjectFactory.h>
+#include <vtkSmartPointer.h>
 
 // v3 : read both QForm and SForm matrices
 // v2 : shift and scale values read by nifti reader when needed
@@ -21,26 +23,19 @@ class vtkRobustImageReader : public vtkObject
 
 public :
 
-	static vtkRobustImageReader *New() {
-		vtkObject* ret = vtkObjectFactory::CreateInstance("vtkRobustImageReader");
-		if(ret) {
-			return (vtkRobustImageReader*)ret;
-		}
-
-		return (new vtkRobustImageReader);
-	}
+	static vtkRobustImageReader *New();
 
 	vtkTypeMacro(vtkRobustImageReader,vtkObject);
 
 	void Update() {
-		vtkImageReader2Factory *imageReaderFactory = vtkImageReader2Factory::New();
-		vtkMetaImageReader *metaImageReader = vtkMetaImageReader::New();
+		vtkNew<vtkImageReader2Factory> imageReaderFactory;
+		vtkNew<vtkMetaImageReader> metaImageReader;
 		imageReaderFactory->RegisterReader(metaImageReader);
-		vtkNIFTIImageReader *niftiiImageReader = vtkNIFTIImageReader::New();
+		vtkNew<vtkNIFTIImageReader> niftiiImageReader;
 		imageReaderFactory->RegisterReader(niftiiImageReader);
 
 		// Create a reader for image and try to load it
-		vtkImageReader2* Reader = imageReaderFactory->CreateImageReader2(FileName) ;
+		vtkImageReader2 *Reader = imageReaderFactory->CreateImageReader2(FileName) ;
 
 		if (!Reader) {
 			std::cerr << "Cannot load file " << FileName << " as an image file; terminating.\n" ;
@@ -87,7 +82,7 @@ public :
 		}
 
 		if (strcmp (Reader->GetClassName(), "vtkNIFTIImageReader") == 0) {
-		    vtkNIFTIImageReader *niftiReader = (vtkNIFTIImageReader *) Reader;
+		    vtkNIFTIImageReader *niftiReader = (vtkNIFTIImageReader*) Reader;
 
             vtkMatrix4x4 *formMatrix = niftiReader->GetQFormMatrix();
 			if (!formMatrix) {
@@ -155,6 +150,8 @@ public :
 
 		}
 
+		Reader->Delete();
+
 	}
 
 	vtkGetObjectMacro(Output, vtkImageData)
@@ -163,7 +160,7 @@ public :
 	vtkSetMacro(FileName, char*)
 
 protected :
-	vtkImageData *Output;
+	vtkSmartPointer<vtkImageData> Output;
 
 	char *FileName;
 
@@ -172,6 +169,8 @@ protected :
 		FileName = 0;
 	};
 };
+
+vtkStandardNewMacro(vtkRobustImageReader);
 
 #endif
 
