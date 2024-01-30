@@ -23,16 +23,9 @@
 
 
 
-using namespace std;
-
 typedef unsigned long long int ulli;
 
 vtkImageData *ComputeIntegral(vtkImageData *img);
-VTK_THREAD_RETURN_TYPE ThreadedIntegral (void *arg);
-
-
-
-
 
 
 inline unsigned long long BoxIntegral(vtkImageData *img, int dim0, int dim1, int dim2, int size0, int size1, int size2)

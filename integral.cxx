@@ -3,19 +3,10 @@
 
 #include <vtkNew.h>
 #include <vtkImageData.h>
-#include <vtkSmartPointer.h>
 #include <vtkTimerLog.h>
 //#define DEBUG
 
-
-typedef struct {
-
-	vtkSmartPointer<vtkImageData> source;
-	vtkSmartPointer<vtkImageData> integral;
-	int ThreadedComputationType;
-
-} ThreadData;
-
+void ThreadedIntegral ( int, vtkImageData*, vtkImageData* );
 
 vtkImageData *ComputeIntegral(vtkImageData *source) {
 
@@ -33,37 +24,28 @@ vtkImageData *ComputeIntegral(vtkImageData *source) {
 	long long int* int_egral_incs = integral->GetIncrements();
 	long long int* sou_rce_incs = source->GetIncrements();
 
-	ThreadData data;
-	data.source = source;
-	data.integral = integral;
 
 	vtkNew<vtkTimerLog> Timer;
 
-	vtkNew<vtkMultiThreader> Threader;
-	Threader->SetSingleMethod (ThreadedIntegral, (void *) &data);
-
 	Timer->StartTimer();
-	data.ThreadedComputationType = 0;
-	Threader->SingleMethodExecute ();
+	ThreadedIntegral( 0, source, integral );
 	Timer->StopTimer();
 #ifdef DEBUG
-		std::cout << "Integral along X done in " << Timer->GetElapsedTime() << "s" << std::endl;
+	std::cout << "Integral along X done in " << Timer->GetElapsedTime() << "s" << std::endl;
 #endif
 
 	Timer->StartTimer();
-	data.ThreadedComputationType = 1;
-	Threader->SingleMethodExecute ();
+	ThreadedIntegral( 1, source, integral );
 	Timer->StopTimer();
 #ifdef DEBUG
-		std::cout << "Integral along Y done in " << Timer->GetElapsedTime() << "s" << std::endl;
+	std::cout << "Integral along Y done in " << Timer->GetElapsedTime() << "s" << std::endl;
 #endif
 
 	Timer->StartTimer();
-	data.ThreadedComputationType = 2;
-	Threader->SingleMethodExecute ();
+	ThreadedIntegral( 2, source, integral );
 	Timer->StopTimer();
 #ifdef DEBUG
-		std::cout << "Integral along Z done in " << Timer->GetElapsedTime() << "s" << std::endl;
+	std::cout << "Integral along Z done in " << Timer->GetElapsedTime() << "s" << std::endl;
 #endif
 
 
@@ -86,55 +68,51 @@ vtkImageData *ComputeIntegral(vtkImageData *source) {
 }
 
 
-VTK_THREAD_RETURN_TYPE ThreadedIntegral (void *arg)
+void ThreadedIntegral ( int type, vtkImageData* source, vtkImageData* integral)
 {
-	vtkMultiThreader::ThreadInfo *Info = (vtkMultiThreader::ThreadInfo*) arg;
-	ThreadData *self = (ThreadData *) Info->UserData;
-	int MyId = Info->ThreadID;
-	int NumberOfThreads = Info->NumberOfThreads;
+	ulli* pin_tegral = static_cast<ulli*>(integral->GetScalarPointer());
+	int* pso_urce = static_cast<int*>(source->GetScalarPointer());
 
-
-
-	ulli* pin_tegral = static_cast<ulli*>(self->integral->GetScalarPointer());
-	int* pso_urce = static_cast<int*>(self->source->GetScalarPointer());
-
-	long long int* int_egral_incs = self->integral->GetIncrements();
-	long long int* sou_rce_incs = self->source->GetIncrements();
+	long long int* int_egral_incs = integral->GetIncrements();
+	long long int* sou_rce_incs = source->GetIncrements();
 
 	int dimensions[3];
 
-	self->source->GetDimensions(dimensions);
+	source->GetDimensions(dimensions);
 
 	int dimX = dimensions[0];
 	int dimY = dimensions[1];
 	int dimZ = dimensions[2];
 
-	switch (self->ThreadedComputationType) {
+	switch ( type ) {
 
 	case 2:
 		// sum over z
-		for (int x = MyId; x < dimX; x += NumberOfThreads) {
+		#pragma omp parallel for
+		for (int x = 0; x < dimX; x ++) {
 			for (int y = 0; y != dimY; y++) {
 				for (int z = 1; z != dimZ; z++) {
 					integ(x,y,z) += integ(x,y,z-1);
 				}
 			}
 		}
-		return (VTK_THREAD_RETURN_VALUE);
+		return;
 	case 1:
 		// sum over y
-		for (int x = MyId; x < dimX; x += NumberOfThreads) {
+		#pragma omp parallel for
+		for (int x = 0; x < dimX; x ++) {
 			for (int z = 0; z != dimZ; z++) {
 				for (int y = 1; y != dimY; y++) {
 					integ(x,y,z) += integ(x,y-1,z);
 				}
 			}
 		}
-		return (VTK_THREAD_RETURN_VALUE);
+		return;
 	case 0:
 	default:
 		// sum over x
-		for (int y = MyId; y < dimY; y += NumberOfThreads) {
+		#pragma omp parallel for
+		for (int y = 0; y < dimY; y ++) {
 			for (int z = 0; z != dimZ; z++) {
 				integ(0,y,z) = sourc(0,y,z);
 				for (int x = 1; x != dimX; x++) {
@@ -142,6 +120,6 @@ VTK_THREAD_RETURN_TYPE ThreadedIntegral (void *arg)
 				}
 			}
 		}
-		return (VTK_THREAD_RETURN_VALUE);
+		return;
 	}
 }

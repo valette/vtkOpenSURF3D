@@ -6,7 +6,6 @@
 #include <vtkImageThreshold.h>
 #include <vtkImageTranslateExtent.h>
 #include <vtkMetaImageReader.h>
-#include <vtkMetaImageWriter.h>
 #include <vtkNew.h>
 #include <vtkSmartPointer.h>
 
@@ -42,8 +41,7 @@ int main( int argc, char *argv[] )
 	double spacing = 0;
 	int maxSize = 0;
 	double threshold = 0;
-	char maskfilename[100];
-	bool bmask = false;
+	char *maskfilename = 0;
 	int writeJSON = 0;
 	int writeBIN = 0;
 	int writeCSV = 0;
@@ -91,12 +89,11 @@ int main( int argc, char *argv[] )
 		}
 
 		if (strcmp(key,"-m") == 0) {
-			strcpy(maskfilename, value);
-			bmask = true;
+			maskfilename = value;
 		}
 
 		if (strcmp(key,"-o") == 0) {
-			outfilename = string(value );
+			outfilename = value;
 		}
 
 		if (strcmp(key,"-json") == 0) {
@@ -161,7 +158,7 @@ int main( int argc, char *argv[] )
 	vtkSmartPointer<vtkImageData> image = imageReader->GetOutput();
 	vtkSmartPointer<vtkImageData> mask;
 
-	if (bmask)
+	if (maskfilename)
 	{
 			// Create image reader factory and register Meta image reader with it
 		vtkNew<vtkImageReader2Factory> maskReaderFactory;
@@ -217,11 +214,6 @@ int main( int argc, char *argv[] )
 		translate->Update();
 		image = translate->GetOutput();
 	}
-
-//	vtkNew<vtkMetaImageWriter> writer;
-//	writer->SetInputData( image );
-//	writer->SetFileName( "test.mhd" );
-//	writer->Write();
 
 	if ( clampMinValues ) {
 
@@ -284,10 +276,10 @@ int main( int argc, char *argv[] )
 
 	}
 	
-	if (bmask) {
+	if (maskfilename) {
 
+		cout << "Use mask : " << maskfilename << endl;
 		SURF->SetMask(mask);
-		cout << "Yeah, We have a mask !" << endl;
 
 	}
 
