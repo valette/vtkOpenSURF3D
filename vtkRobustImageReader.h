@@ -111,6 +111,7 @@ public :
 		}
 
 		if (!flip[0] && !flip[1] && !flip[2]) {
+			Reader->Delete();
 			return;
 		}
 
