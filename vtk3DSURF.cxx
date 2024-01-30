@@ -78,7 +78,7 @@ void vtk3DSURF::Update() {
 
 	int dimensions[3];
 	Input->GetDimensions(dimensions);
-	vtkImageData *temp = Input;
+	vtkSmartPointer<vtkImageData> temp = Input;
 
 	cout << "Image dimensions : " << dimensions[0] << " " <<
 			dimensions[1] << " " << dimensions[2] << endl;
