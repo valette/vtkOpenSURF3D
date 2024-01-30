@@ -11,7 +11,6 @@
 #include <TooN/SVD.h>
 
 using namespace picojson;
-using namespace std;
 using namespace TooN;
 
 typedef struct{
@@ -57,7 +56,7 @@ public:
 	
 	void computeTransform();
 	
-	void BboxParse(string bbox);
+	void BboxParse(std::string bbox);
 	
 	
 	void WriteTransform(const char *fileName, bool writeInliers );

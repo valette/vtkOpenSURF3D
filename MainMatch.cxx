@@ -1,8 +1,7 @@
 #include <sstream>
 #include "MatchPoint.h"
 
-using namespace std;
-
+using std::cout, std::endl;
 
 int main( int argc, char *argv[] )
 {
@@ -23,7 +22,7 @@ int main( int argc, char *argv[] )
 
 	// Parse optionnal arguments
 	int argumentsIndex = 3;
-	string bbox;
+	std::string bbox;
 	
 	while (argumentsIndex < argc) {
 		char* key = argv[argumentsIndex];
@@ -48,7 +47,7 @@ int main( int argc, char *argv[] )
 			computeBoxes = atoi(value);
 		}
 		if (strcmp(key, "-bb") == 0) {
-			bbox = string(value);
+			bbox = value;
 		}
 		if (strcmp(key, "-i") == 0) {
 			writeInliers = true;
