@@ -84,9 +84,8 @@ void ThreadedIntegral ( int type, vtkImageData* source, vtkImageData* integral)
 	int dimY = dimensions[1];
 	int dimZ = dimensions[2];
 
-	switch ( type ) {
+	if ( type == 2 ) {
 
-	case 2:
 		// sum over z
 		#pragma omp parallel for
 		for (int x = 0; x < dimX; x ++) {
@@ -96,8 +95,8 @@ void ThreadedIntegral ( int type, vtkImageData* source, vtkImageData* integral)
 				}
 			}
 		}
-		return;
-	case 1:
+	} else if ( type == 1 ) {
+
 		// sum over y
 		#pragma omp parallel for
 		for (int x = 0; x < dimX; x ++) {
@@ -107,9 +106,7 @@ void ThreadedIntegral ( int type, vtkImageData* source, vtkImageData* integral)
 				}
 			}
 		}
-		return;
-	case 0:
-	default:
+	} else {
 		// sum over x
 		#pragma omp parallel for
 		for (int y = 0; y < dimY; y ++) {
@@ -120,6 +117,5 @@ void ThreadedIntegral ( int type, vtkImageData* source, vtkImageData* integral)
 				}
 			}
 		}
-		return;
 	}
 }
