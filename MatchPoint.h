@@ -1,6 +1,6 @@
 #include <sstream>
 #include <vector>
-#include <map>
+#include <set>
 #include "ipoint.h"
 #include <iostream>
 #include <fstream>
@@ -13,19 +13,11 @@
 using namespace picojson;
 using namespace TooN;
 
-typedef struct{
-    IpVec points;
-    int dimensions[3];
-    double origin[3];
-    double spacing[3];
-} JSONdata;
-
-
 class Box3 {
 public:
 	Box3();
-	void AddPoint(TooN::Vector<3> point);
-	bool ContainsPoint(Ipoint& p);
+	void AddPoint(const TooN::Vector<3> &point);
+	bool ContainsPoint(const Ipoint& p);
 	TooN::Vector<3> min;
 	TooN::Vector<3> max;
 };
@@ -66,9 +58,9 @@ public:
 	}
 
 private:
-	bool getRT(std::map<int, std::pair<int, int>* > Pairs, TooN::SIM3<double>& Transform);
+	bool getRT( const std::set<int> &Pairs, TooN::SIM3<double>& Transform);
 
-	JSONdata volumes[2];
+	IpVec points[2];
 	float RansacDist;
 	int RansacMinInliers;
 	float MatchingDist;

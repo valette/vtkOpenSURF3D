@@ -60,8 +60,6 @@ public:
   //! Vector of descriptor components
   std::vector< float > descriptor;
 
-  //! Point id
-//  int id;
 };
 
 //-------------------------------------------------------

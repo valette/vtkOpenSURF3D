@@ -19,9 +19,7 @@ void MatchPoint::Parse(const char *fileName, int id) {
 	  std::cerr << "id must be 0 or 1" << std::endl;
 	  exit(2);
 	}
-	
-	JSONdata &d = volumes[id];
-	
+
 	ifstream pointsFile(fileName, ios::in);
 	picojson::value v;
 	pointsFile >> v;
@@ -41,43 +39,20 @@ void MatchPoint::Parse(const char *fileName, int id) {
 
 	// obtain a const reference to the map, and print the contents
     picojson::object& o = v.get<picojson::object>();
-        
-    d.dimensions[0] = o["dimensions"].get<picojson::array>()[0].get<double>();
-    d.dimensions[1] = o["dimensions"].get<picojson::array>()[1].get<double>();
-    d.dimensions[2] = o["dimensions"].get<picojson::array>()[2].get<double>();
     
-    d.origin[0] = o["origin"].get<picojson::array>()[0].get<double>();
-    d.origin[1] = o["origin"].get<picojson::array>()[1].get<double>();
-    d.origin[2] = o["origin"].get<picojson::array>()[2].get<double>();
-    
-    d.spacing[0] = o["spacing"].get<picojson::array>()[0].get<double>();
-    d.spacing[1] = o["spacing"].get<picojson::array>()[1].get<double>();
-    d.spacing[2] = o["spacing"].get<picojson::array>()[2].get<double>();
-    
-    picojson::array a = o["points"].get<picojson::array>();
-    
-	int index = 0;
-	for (picojson::array::const_iterator j = a.begin(); j != a.end(); ++j) {
+	for (const auto &j : o["points"].get<picojson::array>()) {
 		Ipoint point;
-		
-		picojson::object p = j->get<picojson::object>();
-		
+		picojson::object p = j.get<picojson::object>();
 		point.laplacian = p["laplacian"].get<double>();
 		point.response  = p["response"].get<double>();
 		point.scale     = p["scale"].get<double>();
 		point.x 		= p["x"].get<double>();
 		point.y 		= p["y"].get<double>();
 		point.z 		= p["z"].get<double>();
-		
 		picojson::array t = p["descriptor"].get<picojson::array>();
-		int desc_it = 0;
 		point.allocate( t.size() );
-		for (picojson::array::const_iterator m = t.begin(); m != t.end(); ++m){
-			point.descriptor[desc_it++] = m->get<double>();
-		}
-
-		d.points.push_back(point);
-		index++;
+		for ( const auto & m : t ) point.descriptor.push_back( m.get<double>() );
+		this->points[id].push_back(point);
     }
 
 }
@@ -85,8 +60,8 @@ void MatchPoint::Parse(const char *fileName, int id) {
 //! Populate IpPairVec with matched ipts 
 void MatchPoint::computeMatches()
 {
-	IpVec &ipts1 = volumes[0].points;
-	IpVec &ipts2 =  volumes[1].points;
+	IpVec &ipts1 = points[0];
+	IpVec &ipts2 =  points[1];
 	
 	cout << "Set1 size : " << ipts1.size() << endl;
 	cout << "Set2 size : " << ipts2.size() << endl;
@@ -94,29 +69,20 @@ void MatchPoint::computeMatches()
 	if (useBBoxin)
 	{
 		int size = 0;
-		for(unsigned int i = 0; i < ipts1.size(); i++) 
-		{
-			if (bboxAin.ContainsPoint(ipts1[i]))
-				size++;
-		}
+		for( const auto &pt : ipts1 )
+			if ( bboxAin.ContainsPoint( pt ) ) size++;
+
 		cout << "Set1 size (in bbox) : " << size << endl;
 		size = 0;
-		for(unsigned int i = 0; i < ipts2.size(); i++) 
-		{
-			if (bboxBin.ContainsPoint(ipts2[i]))
-				size++;
-		}
+		for( const auto &pt : ipts2 )
+			if ( bboxBin.ContainsPoint( pt ) )size++;
 		cout << "Set2 size (in bbox) : " << size << endl;
 	}
 
-  float dist, d1, d2;
-  int bestJ;
-
-  matches.clear();
-
-  if ((ipts1.size() < 2) || (ipts2.size() < 2)) {
-	  return;
-  }
+    float dist, d1, d2;
+    int bestJ;
+    matches.clear();
+    if ((ipts1.size() < 2) || (ipts2.size() < 2)) return;
 
 	cout << "Config : " << endl;
 	cout << "\tRansacDist :: " << RansacDist << endl;
@@ -190,6 +156,8 @@ void MatchPoint::saveParameters(const float aRansacDist,
 void MatchPoint::computeTransform()
 {
 	int N = 3;
+	const auto &pts1 = this->points[ 0 ];
+	const auto &pts2 = this->points[ 1 ];
 
 	if (matches.size() <= N) {
 		cout << "FAIL 1 : " << matches.size() << endl;
@@ -209,16 +177,12 @@ void MatchPoint::computeTransform()
 		fail++;
 
 		// - 1 - Pick up 2 points and compute transformation
-		  std::map<int, std::pair<int, int>* >  RANSACSet;
-		
-	
+		std::set<int> RANSACSet;
+
 		while (RANSACSet.size() < N) {
 			int x = rand() % matches.size();
-
-			if (RANSACSet.count(x) > 0)
-				continue;
-
-			RANSACSet.insert( std::pair<int, std::pair<int, int>* >(x, &matches[x]) );
+			if (RANSACSet.count(x) > 0)	continue;
+			RANSACSet.insert( x );
 		}
 
 		TooN::SIM3<double> Transform;
@@ -246,8 +210,8 @@ void MatchPoint::computeTransform()
 		for (auto it : matches )
 		{
 			//pointA = makeVector(it->first.x, it->first.y, it->first.z);
-			const Ipoint &ptA = this->volumes[ 0 ].points[ it.first ];
-			const Ipoint &ptB = this->volumes[ 1 ].points[ it.second ];
+			const Ipoint &ptA = pts1[ it.first ];
+			const Ipoint &ptB = pts2[ it.second ];
 			pointA[0] = ptA.x;
 			pointA[1] = ptA.y;
 			pointA[2] = ptA.z;
@@ -287,8 +251,8 @@ void MatchPoint::computeTransform()
 
 	for ( auto it : matches ) {
 
-		if ( bboxAmax.ContainsPoint(this->volumes[ 0 ].points[ it.first ] ) ) nbPointInA++;
-		if ( bboxBmax.ContainsPoint( this->volumes[ 1 ].points[ it.second ] ) ) nbPointInB++;
+		if ( bboxAmax.ContainsPoint( pts1[ it.first ] ) ) nbPointInA++;
+		if ( bboxBmax.ContainsPoint( pts2[ it.second ] ) ) nbPointInB++;
 
 	}
 
@@ -303,7 +267,7 @@ void MatchPoint::computeTransform()
 }
 
 
-bool MatchPoint::getRT(std::map<int, std::pair<int, int>* > Pairs, TooN::SIM3<double>& Transform)
+bool MatchPoint::getRT(const std::set<int> &Pairs, TooN::SIM3<double>& Transform)
 {
     //[Least-Squares Estimation... Umeyama]
 	const int nbrFinalInliers = Pairs.size();
@@ -318,10 +282,10 @@ bool MatchPoint::getRT(std::map<int, std::pair<int, int>* > Pairs, TooN::SIM3<do
 
 	unsigned int row = 0;
 
-	for (std::map<int, std::pair<int, int>* >::iterator it = Pairs.begin() ; it != Pairs.end() ; it++, row++)
-	{
-		const auto &ptA = this->volumes[ 0 ].points[ it->second->first ];
-		const auto &ptB = this->volumes[ 1 ].points[ it->second->second ];
+	for ( const auto &index : Pairs ) {
+		const auto &pair = this->matches[ index ];
+		const auto &ptA = this->points[ 0 ][ pair.first ];
+		const auto &ptB = this->points[ 1 ][ pair.second ];
 		TooN::Vector<3> pointA = makeVector( ptA.x, ptA.y, ptA.z);
 		TooN::Vector<3> pointB = makeVector( ptB.x, ptB.y, ptB.z);
 		
@@ -330,6 +294,7 @@ bool MatchPoint::getRT(std::map<int, std::pair<int, int>* > Pairs, TooN::SIM3<do
 
 		moyA += pointA;
 		moyB += pointB;
+		row++;
 	}
 
 	moyA /= nbrFinalInliers;
@@ -536,7 +501,7 @@ Box3::Box3() {
 	
 }
 
-void Box3::AddPoint(TooN::Vector<3> point) {
+void Box3::AddPoint(const TooN::Vector<3> &point) {
 	min[0] = std::min(point[0], min[0]);
 	min[1] = std::min(point[1], min[1]);
 	min[2] = std::min(point[2], min[2]);
@@ -546,7 +511,7 @@ void Box3::AddPoint(TooN::Vector<3> point) {
 	max[2] = std::max(point[2], max[2]);
 }
 
-bool Box3::ContainsPoint(Ipoint& p) {
+bool Box3::ContainsPoint(const Ipoint& p) {
 		if ( p.x < min[0] || p.x > max[0] ||
 		     p.y < min[1] || p.y > max[1] ||
 		     p.z < min[2] || p.z > max[2] ) {
