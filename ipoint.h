@@ -34,7 +34,7 @@ class Ipoint {
 public:
 
   //! Constructor
-  Ipoint() : orientation(0), response(0), laplacian(0), scale(0) {};
+  Ipoint() : response(0), laplacian(0), scale(0) {};
 
   //! Gets the distance in descriptor space between Ipoints
   float operator-(const Ipoint &rhs)
@@ -58,14 +58,10 @@ public:
   //! Response
   float response;
 
-  //! Orientation measured anti-clockwise from +ve x-axis
-  float orientation;
-
   //! Sign of laplacian for fast matching purposes
   int laplacian;
 
   //! Vector of descriptor components
-//  float *descriptor;
   std::vector< float > descriptor;
 
   //! Point id
