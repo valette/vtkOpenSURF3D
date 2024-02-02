@@ -368,9 +368,9 @@ void vtk3DSURF::WritePoints(const char *fileName) {
 			iPoint["laplacian"] = value ((double)point.laplacian);
 			picojson::array descriptor;
 			bool test = false;
-			for (int k = 0; k < point.size; k++) {
-				descriptor.push_back(value(point.descriptor[k]));
-			}
+			for (const auto &d : point.descriptor )
+				descriptor.push_back( value( d ) );
+
 			iPoint["descriptor"] = value (descriptor);
 
 			datapoint.push_back(value(iPoint));
@@ -422,9 +422,9 @@ void vtk3DSURF::WritePointsCSV(const char *fileName) {
 		pointsFile <<  point.scale * Sspacing           << ",";
 		pointsFile <<  point.laplacian                  << ",";
 		pointsFile <<  point.response                   << ",";
-		for (int k = 0; k < point.size; k++) {
+		for (int k = 0; k < point.descriptor.size(); k++) {
 			pointsFile <<  point.descriptor[k];
-			if (k<point.size - 1) pointsFile << ",";
+			if (k<point.descriptor.size() - 1) pointsFile << ",";
 		}
 
 		pointsFile << endl;
@@ -458,9 +458,9 @@ void vtk3DSURF::WritePointsCSVGZ(const char *fileName, const char *gzOpts) {
 		gzprintf( gz, "%d,", point.laplacian );
 		gzprintf( gz, "%f,", point.response );
 
-		for (int k = 0; k < point.size; k++) {
+		for (int k = 0; k < point.descriptor.size(); k++) {
 
-			if ( k < point.size - 1 ) {
+			if ( k < point.descriptor.size() - 1 ) {
 
 				gzprintf( gz, "%f,", point.descriptor[ k ] );
 
@@ -492,14 +492,11 @@ void vtk3DSURF::WritePointsBinary(const char *fileName) {
 	this->Cast->GetDimensions(dimensions);
 
 	double Sspacing = pow(spacing[0]*spacing[1]*spacing[2], 1.0/3);
-
 	FILE * file = fopen(fileName,"wb");
-
 	float valF;
 
 	for (int i = 0; i != this->points.size(); i++) {
 		Ipoint &point = this->points[i];
-		
 		valF =  point.x * spacing[0] + origin[0];
 		fwrite(&valF, sizeof(float), 1, file);
 		valF =  point.y * spacing[1] + origin[1];
@@ -512,8 +509,7 @@ void vtk3DSURF::WritePointsBinary(const char *fileName) {
 		fwrite(&valF, sizeof(float), 1, file);
 		valF =  point.response;
 		fwrite(&valF, sizeof(float), 1, file);
-
-		fwrite(&point.descriptor[0], sizeof(float), point.size, file);
+		fwrite(&point.descriptor[0], sizeof(float), point.descriptor.size(), file);
 	}
 
 	fclose(file);

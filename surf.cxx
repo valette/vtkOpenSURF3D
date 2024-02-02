@@ -151,8 +151,7 @@ void Surf::getDescriptor(int id, int radius, bool normalize)
 
   //Convert to Unit Vector
   len = sqrt(len);
-  for(int i = 0; i < ipt->size; ++i)
-    desc[i] /= len;
+  for(int i = 0; i < ipt->descriptor.size(); ++i) desc[i] /= len;
 }
 
 

@@ -34,20 +34,19 @@ class Ipoint {
 public:
 
   //! Constructor
-  Ipoint() : orientation(0), descriptor(0), response(0), laplacian(0), scale(0), size(0) {};
+  Ipoint() : orientation(0), response(0), laplacian(0), scale(0) {};
 
   //! Gets the distance in descriptor space between Ipoints
   float operator-(const Ipoint &rhs)
   {
     float sum=0.f;
-    for(int i=0; i < this->size; ++i)
+    for(int i=0; i < this->descriptor.size(); ++i)
       sum += (this->descriptor[i] - rhs.descriptor[i])*(this->descriptor[i] - rhs.descriptor[i]);
     return sqrt(sum);
   };
 
   void allocate( int size ) {
-	  this->size = size;
-	  this->descriptor.resize( size );
+    this->descriptor.resize( size );
   }
 
   //! Coordinates of the detected interest point
@@ -64,9 +63,6 @@ public:
 
   //! Sign of laplacian for fast matching purposes
   int laplacian;
-
-  //! Size of descriptor
-  int size;
 
   //! Vector of descriptor components
 //  float *descriptor;
