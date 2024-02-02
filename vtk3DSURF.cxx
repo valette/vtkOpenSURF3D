@@ -180,38 +180,29 @@ void vtk3DSURF::Update() {
 	this->Cast = Shift->GetOutput();
 
 	Timer->StartTimer();
-
 	this->Integral =  vtkSmartPointer<vtkImageData>::Take(ComputeIntegral(Cast));
-
 	Timer->StopTimer();
+	cout << "Integral computed in " << Timer->GetElapsedTime() << "s" << endl;
 
-	cout << "Integral computed in " <<
-	Timer->GetElapsedTime() << "s" << endl;
-
-	Timer->StartTimer();
-
-	//Sample : un peu de subsampling (mais pas pour tout : response layer & interpolation)
-
-	//													octave	interval	sample
-	FastHessian hessian(this->Integral, this->points, 	4, 		4, 			2, 			this->Threshold);
-
-	if (Mask != 0)
-		hessian.setMask(Mask);
-
-	hessian.getIpoints();
 	if ( this->PointFile ) this->ReadIPoints();
+	else {
+		Timer->StartTimer();
+		//Sample : a bit of subsampling (response layer & interpolation)
 
-	Timer->StopTimer();
-	cout << "FastHessian computed in " <<
-	Timer->GetElapsedTime() << "s" << endl;
+		//													octave	interval	sample
+		FastHessian hessian(this->Integral, this->points, 	4, 		4, 			2, 			this->Threshold);
 
-/*
-	Timer->StartTimer();
-	hessian.WriteResponseMap();
-	Timer->StopTimer();
-	cout << "Hessian written in " <<
-	Timer->GetElapsedTime() << "s" << endl;
-	*/
+		if (Mask != 0) hessian.setMask(Mask);
+		hessian.getIpoints();
+		Timer->StopTimer();
+		cout << "FastHessian computed in " << Timer->GetElapsedTime() << "s" << endl;
+		/*	Timer->StartTimer();
+			hessian.WriteResponseMap();
+			Timer->StopTimer();
+			cout << "Hessian written in " <<
+			Timer->GetElapsedTime() << "s" << endl;
+			*/
+	}
 
 	Timer->StartTimer();
 
@@ -260,8 +251,7 @@ void vtk3DSURF::Update() {
 	float min, max;
 	min = max = points[ 0 ].descriptor[ 0 ];
 	for ( const auto &point : this->points )
-		for ( int i = 0; i < point.size; i++ ) {
-			float value = point.descriptor[ i ];
+		for ( const auto &value : point.descriptor ) {
 			if ( max < value ) max = value;
 			if ( min > value ) min = value;
 		}
