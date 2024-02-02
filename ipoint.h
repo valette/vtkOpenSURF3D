@@ -14,20 +14,16 @@
 
 #include <vector>
 #include <math.h>
-#include <limits>
 
 
 //-------------------------------------------------------
 
 class Ipoint; // Pre-declaration
 typedef std::vector<Ipoint> IpVec;
-typedef std::vector<std::pair<Ipoint, Ipoint> > IpPairVec;
+typedef std::vector<std::pair<int, int> > IpPairVec;
 
 //-------------------------------------------------------
 
-//! Ipoint operations
-void getMatches(IpVec &ipts1, IpVec &ipts2, IpPairVec &matches);
-//-------------------------------------------------------
 
 class Ipoint {
 
@@ -65,7 +61,7 @@ public:
   std::vector< float > descriptor;
 
   //! Point id
-  int id;
+//  int id;
 };
 
 //-------------------------------------------------------

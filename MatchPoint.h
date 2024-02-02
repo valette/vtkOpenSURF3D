@@ -66,7 +66,7 @@ public:
 	}
 
 private:
-	bool getRT(std::map<int, std::pair<Ipoint, Ipoint>* > Pairs, TooN::SIM3<double>& Transform);
+	bool getRT(std::map<int, std::pair<int, int>* > Pairs, TooN::SIM3<double>& Transform);
 
 	JSONdata volumes[2];
 	float RansacDist;

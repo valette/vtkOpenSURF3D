@@ -68,7 +68,6 @@ void MatchPoint::Parse(const char *fileName, int id) {
 		point.x 		= p["x"].get<double>();
 		point.y 		= p["y"].get<double>();
 		point.z 		= p["z"].get<double>();
-		point.id = index;
 		
 		picojson::array t = p["descriptor"].get<picojson::array>();
 		int desc_it = 0;
@@ -111,7 +110,7 @@ void MatchPoint::computeMatches()
 	}
 
   float dist, d1, d2;
-  Ipoint *match, *match2;
+  int bestJ;
 
   matches.clear();
 
@@ -157,7 +156,7 @@ void MatchPoint::computeMatches()
       {
         d2 = d1;
         d1 = dist;
-        match = &ipts2[j];
+        bestJ = j;
       }
       else if(dist<d2) // this feature matches better than second best
       {
@@ -168,7 +167,7 @@ void MatchPoint::computeMatches()
     if (	(d1/d2 < MatchingDist2Second) && (d2 != FLT_MAX) && 
 			(d1 < MatchingDist))
     { 
-      matches.push_back(std::make_pair(ipts1[i], *match));
+      matches.push_back(std::make_pair(i, bestJ ));
     }
   }
     cout << "Nb match : " << matches.size() << endl;
@@ -210,7 +209,7 @@ void MatchPoint::computeTransform()
 		fail++;
 
 		// - 1 - Pick up 2 points and compute transformation
-		  std::map<int, std::pair<Ipoint, Ipoint>* >  RANSACSet;
+		  std::map<int, std::pair<int, int>* >  RANSACSet;
 		
 	
 		while (RANSACSet.size() < N) {
@@ -219,7 +218,7 @@ void MatchPoint::computeTransform()
 			if (RANSACSet.count(x) > 0)
 				continue;
 
-			RANSACSet.insert( std::pair<int, std::pair<Ipoint, Ipoint>* >(x, &matches[x]) );
+			RANSACSet.insert( std::pair<int, std::pair<int, int>* >(x, &matches[x]) );
 		}
 
 		TooN::SIM3<double> Transform;
@@ -247,20 +246,22 @@ void MatchPoint::computeTransform()
 		for (auto it : matches )
 		{
 			//pointA = makeVector(it->first.x, it->first.y, it->first.z);
-			pointA[0] = it.first.x;
-			pointA[1] = it.first.y;
-			pointA[2] = it.first.z;
+			const Ipoint &ptA = this->volumes[ 0 ].points[ it.first ];
+			const Ipoint &ptB = this->volumes[ 1 ].points[ it.second ];
+			pointA[0] = ptA.x;
+			pointA[1] = ptA.y;
+			pointA[2] = ptA.z;
 			
 			//pointB = makeVector(it->second.x, it->second.y, it->second.z);
-			pointB[0] = it.second.x;
-			pointB[1] = it.second.y;
-			pointB[2] = it.second.z;
+			pointB[0] = ptB.x;
+			pointB[1] = ptB.y;
+			pointB[2] = ptB.z;
 			
 			//cout << TooN::norm( pointB - Transform*pointA ) << endl;
 			
 			if (TooN::norm( pointB - TransformInv*pointA ) < RansacDist) {
-				currentInliers[ 2 * inliers ] = it.first.id;
-				currentInliers[ 1 + 2 * inliers ] = it.second.id;
+				currentInliers[ 2 * inliers ] = it.first;
+				currentInliers[ 1 + 2 * inliers ] = it.second;
 				inliers++;
 				if (this->computeBoundingBoxes) {
 					bboxA.AddPoint(pointA);
@@ -286,8 +287,8 @@ void MatchPoint::computeTransform()
 
 	for ( auto it : matches ) {
 
-		if ( bboxAmax.ContainsPoint( it.first ) ) nbPointInA++;
-		if ( bboxBmax.ContainsPoint( it.second ) ) nbPointInB++;
+		if ( bboxAmax.ContainsPoint(this->volumes[ 0 ].points[ it.first ] ) ) nbPointInA++;
+		if ( bboxBmax.ContainsPoint( this->volumes[ 1 ].points[ it.second ] ) ) nbPointInB++;
 
 	}
 
@@ -302,7 +303,7 @@ void MatchPoint::computeTransform()
 }
 
 
-bool MatchPoint::getRT(std::map<int, std::pair<Ipoint, Ipoint>* > Pairs, TooN::SIM3<double>& Transform)
+bool MatchPoint::getRT(std::map<int, std::pair<int, int>* > Pairs, TooN::SIM3<double>& Transform)
 {
     //[Least-Squares Estimation... Umeyama]
 	const int nbrFinalInliers = Pairs.size();
@@ -317,10 +318,12 @@ bool MatchPoint::getRT(std::map<int, std::pair<Ipoint, Ipoint>* > Pairs, TooN::S
 
 	unsigned int row = 0;
 
-	for (std::map<int, std::pair<Ipoint, Ipoint>* >::iterator it = Pairs.begin() ; it != Pairs.end() ; it++, row++)
+	for (std::map<int, std::pair<int, int>* >::iterator it = Pairs.begin() ; it != Pairs.end() ; it++, row++)
 	{
-		TooN::Vector<3> pointA = makeVector(it->second->first.x, it->second->first.y, it->second->first.z);
-		TooN::Vector<3> pointB = makeVector(it->second->second.x, it->second->second.y, it->second->second.z);
+		const auto &ptA = this->volumes[ 0 ].points[ it->second->first ];
+		const auto &ptB = this->volumes[ 1 ].points[ it->second->second ];
+		TooN::Vector<3> pointA = makeVector( ptA.x, ptA.y, ptA.z);
+		TooN::Vector<3> pointB = makeVector( ptB.x, ptB.y, ptB.z);
 		
 		A[row] = pointA;
 		B[row] = pointB;

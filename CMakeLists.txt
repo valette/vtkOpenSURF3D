@@ -31,7 +31,6 @@ ADD_EXECUTABLE(surf3d
  vtk3DSURF.cxx
  integral.cxx
  fasthessian.cxx
- ipoint.cxx
  surf.cxx)
 
 TARGET_LINK_LIBRARIES(surf3d ${OpenCV_LIBS} ${VTK_LIBRARIES} ${ZLIB_LIBRARIES})
@@ -39,8 +38,7 @@ TARGET_LINK_LIBRARIES(surf3d ${OpenCV_LIBS} ${VTK_LIBRARIES} ${ZLIB_LIBRARIES})
 if (BUILD_SURFMATCH)
   ADD_EXECUTABLE(match3d
     MainMatch.cxx
-    MatchPoint.cxx
-    ipoint.cxx)
+    MatchPoint.cxx)
 
   TARGET_LINK_LIBRARIES(match3d lapack blas ${VTK_LIBRARIES})
 endif (BUILD_SURFMATCH)
