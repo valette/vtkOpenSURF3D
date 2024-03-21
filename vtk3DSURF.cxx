@@ -432,7 +432,7 @@ void vtk3DSURF::WritePointsCSV(const char *fileName) {
 	pointsFile.close();
 }
 
-void vtk3DSURF::WritePointsCSVGZ(const char *fileName, const char *gzOpts) {
+void vtk3DSURF::WritePointsCSVGZ(const char *fileName, const char *gzOpts, int precision ) {
 
 	double origin[ 3 ];
 	double spacing[ 3 ];
@@ -447,6 +447,14 @@ void vtk3DSURF::WritePointsCSVGZ(const char *fileName, const char *gzOpts) {
 	if ( gzOpts ) opts += gzOpts;
 
 	gzFile gz = gzopen( fileName, opts.c_str() );
+	string coeff( "%f," ), coeffEnd( "%f" );
+
+	if ( precision >= 0 ) {
+		coeffEnd = "%.";
+		coeffEnd += std::to_string( precision );
+		coeffEnd += "f";
+		coeff = coeffEnd + ",";
+	}
 
 	for ( int i = 0; i != this->points.size(); i++) {
 
@@ -462,11 +470,11 @@ void vtk3DSURF::WritePointsCSVGZ(const char *fileName, const char *gzOpts) {
 
 			if ( k < point.descriptor.size() - 1 ) {
 
-				gzprintf( gz, "%f,", point.descriptor[ k ] );
+				gzprintf( gz, coeff.c_str(), point.descriptor[ k ] );
 
 			} else {
 
-				gzprintf( gz, "%f", point.descriptor[ k ] );
+				gzprintf( gz, coeffEnd.c_str(), point.descriptor[ k ] );
 
 			}
 

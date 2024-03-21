@@ -24,6 +24,8 @@ int main( int argc, char *argv[] )
 		cout << "-cmin value    : clamp values lower than specified value" << endl;
 		cout << "-cmax value    : clamp values larger than specified value" << endl;
 		cout << "-csvgz 0/1     : write points as csv.gz file. Default : 1" << endl;
+		cout << "-gz opts       : set gz options such as compression level" << endl;
+		cout << "-precision n   : set coefficients precision in csv.gz file" << endl;
 		cout << "-json 0/1      : write points as json file. Default : 0" << endl;
 		cout << "-n number      : maximum number of points" << endl;
 		cout << "-normalize 0/1 : normalize descriptors (default : 1 )" << endl;
@@ -58,6 +60,7 @@ int main( int argc, char *argv[] )
 	float clampMaxValue = 0;
 	bool normalize = true;
 	char *gzOpts = 0;
+	int precision = -1;
 
 	string outfilename("points");
 
@@ -142,6 +145,10 @@ int main( int argc, char *argv[] )
 
 		if (strcmp(key,"-gz") == 0) {
 			gzOpts = value;
+		}
+
+		if (strcmp(key,"-precision") == 0) {
+			precision = atoi( value );
 		}
 
 		argumentsIndex += 2;
@@ -315,7 +322,7 @@ int main( int argc, char *argv[] )
 	if ( writeCSVGZ ) {
 
 		Timer->StartTimer();
-		SURF->WritePointsCSVGZ( (outfilename+".csv.gz").c_str(), gzOpts );
+		SURF->WritePointsCSVGZ( (outfilename+".csv.gz").c_str(), gzOpts, precision );
 		Timer->StopTimer();
 		cout << "csvgz written in " << Timer->GetElapsedTime() << "s" << endl;
 

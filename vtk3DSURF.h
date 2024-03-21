@@ -32,7 +32,7 @@ public :
 	void WritePoints(const char *fileName);
 
 	void WritePointsCSV(const char *fileName);
-	void WritePointsCSVGZ(const char *fileName, const char *gzOpts);
+	void WritePointsCSVGZ(const char *fileName, const char *gzOpts, int precision = -1);
 	void WritePointsBinary(const char *fileName);
 
 	vtkSetMacro(Normalize, bool)
