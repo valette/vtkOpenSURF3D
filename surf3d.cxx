@@ -250,7 +250,6 @@ int main( int argc, char *argv[] )
 	
 	vtkNew<vtk3DSURF> SURF;
 	SURF->SetInput(image);
-	SURF->SetNbThread(24);
 	SURF->SetNormalize(normalize);
 	SURF->SetMaxSize(maxSize);
 	SURF->SetSpacing(spacing);
