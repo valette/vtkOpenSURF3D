@@ -248,8 +248,9 @@ void vtk3DSURF::Update() {
 	Timer->StopTimer();
 	cout << "Descriptors computed in " <<
 	Timer->GetElapsedTime() << "s" << endl;
-	float min, max;
-	min = max = points[ 0 ].descriptor[ 0 ];
+	float min = std::numeric_limits<float>::max();
+	float max = std::numeric_limits<float>::min();
+
 	for ( const auto &point : this->points )
 		for ( const auto &value : point.descriptor ) {
 			if ( max < value ) max = value;
