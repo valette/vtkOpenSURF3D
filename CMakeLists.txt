@@ -1,12 +1,16 @@
+if( CMAKE_PARENT_LIST_FILE STREQUAL CMAKE_CURRENT_LIST_FILE )
+  cmake_minimum_required(VERSION 3.30)
+  project(vtkOpenSURF3D)
+endif()
 
 find_package(OpenCV REQUIRED)
 find_package( ZLIB REQUIRED )
 
-if(NOT DEFINED VTK_USE_FILE )
-find_package(VTK REQUIRED)
-endif(NOT DEFINED VTK_USE_FILE )
+#if(NOT DEFINED VTK_INCLUDE_DIRS )
+find_package(VTK REQUIRED COMPONENTS CommonSystem ImagingColor IOExport )
+#endif()
 
-include ("${VTK_USE_FILE}")
+include_directories(${VTK_INCLUDE_DIRS})
 
 option(EXTRACT_CORNER "Extract corner points")
 
@@ -20,7 +24,6 @@ if (OPENMP_FOUND)
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif (OPENMP_FOUND)
-
 
 OPTION(BUILD_SURFMATCH "Build surf match program. Requires the Toon library." OFF)
 
