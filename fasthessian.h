@@ -17,7 +17,6 @@
 #include <vtkImageData.h>
 #include <opencv2/opencv.hpp>
 #include "ipoint.h"
-#include <vtkMutexLock.h>
 
 #define NONE_SCALE	0 //0b00
 #define FIRST_SCALE 1 //0b01
