@@ -1,3 +1,5 @@
+[![CI](https://github.com/valette/vtkOpenSURF3D/actions/workflows/ci.yml/badge.svg)](https://github.com/valette/vtkOpenSURF3D/actions/workflows/ci.yml)
+
 vtkOpenSURF3D : a 3D implementation of Speeded Up Robust Features for VTK
 =========================================================================
 
@@ -49,11 +51,11 @@ Available options:
  * -r radius : descriptor volume radius. Default : 5
  * -s spacing : resample input image to isotropic sampling with given spacing
  * -t threshold : set detector threshold. Default: 0
- * -type 0/1/2 : descriptor type : 
+ * -type 0/1/2 : descriptor type :
 	* 0 : SURF3D descriptor (default). Descriptor size : 48
 	* 1 : subvolume HAAR coefficients. Descriptor size : 24 * radius^3
 	* 2 : subvolume raw voxels. Descriptor size : 8 * radius^3
-	
+
 ### Output keypoints format ###
 
 Each keypoint is described by a list of values:
