@@ -29,8 +29,8 @@ jobs:
 
     - name: Install opencv
       run: |
-        sudo apt-get update
-        sudo apt-get -y install opencv-dev
+        apt-get update
+        apt-get -y install opencv-dev
 
     - name: Setup Directories
       working-directory: ${{github.workspace}}
