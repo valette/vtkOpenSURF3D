@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 #include <vtkTimerLog.h>
 #include <vtkImageData.h>
@@ -15,7 +16,7 @@
 
 int main( int argc, char *argv[] )
 {
-	
+
 	if (argc < 2) {
 		cout << "Usage : surf3d file [options]" << endl;
 		cout << "Available options:" << endl;
@@ -155,7 +156,7 @@ int main( int argc, char *argv[] )
 	}
 
 	cout << "load : " << argv[1] << endl;
-	
+
 	vtkNew<vtkTimerLog> Timer;
 	Timer->StartTimer();
 
@@ -171,21 +172,21 @@ int main( int argc, char *argv[] )
 		vtkNew<vtkImageReader2Factory> maskReaderFactory;
 		vtkNew<vtkMetaImageReader> metamaskReader;
 		maskReaderFactory->RegisterReader(metamaskReader);
-		
+
 		// Create a reader for image and try to load it
 		vtkSmartPointer<vtkImageReader2> maskReader = maskReaderFactory->CreateImageReader2(maskfilename) ;
 		if (!maskReader) {
 			cerr << "Cannot load file " << argv[1] << " as an mask file; terminating.\n" ;
 			return 5 ;
 		}
-		
+
 		maskReader->SetFileName(maskfilename) ;
 		maskReader->Update() ;
 		mask = maskReader->GetOutput();
-		
+
 		int* mask_dims  = mask->GetDimensions();
 		int* image_dims = image->GetDimensions();
-		
+
 		if (mask_dims[0] != image_dims[0] ||
 				mask_dims[1] != image_dims[1] ||
 				mask_dims[2] != image_dims[2] )
@@ -193,7 +194,7 @@ int main( int argc, char *argv[] )
 				cerr << "Mismatch between Image && mask dimension" << endl;
 				return 6;
 			}
-			
+
 		if (mask->GetNumberOfScalarComponents() != 1)
 			{
 				cerr << "Too many components for mask (>1)" << endl;
@@ -247,7 +248,7 @@ int main( int argc, char *argv[] )
 
 	Timer->StopTimer();
 	cout << "Image loaded in " << Timer->GetElapsedTime() << "s" << endl;
-	
+
 	vtkNew<vtk3DSURF> SURF;
 	SURF->SetInput(image);
 	SURF->SetNormalize(normalize);
@@ -281,7 +282,7 @@ int main( int argc, char *argv[] )
 		SURF->SetPointFile( pointFile );
 
 	}
-	
+
 	if (maskfilename) {
 
 		cout << "Use mask : " << maskfilename << endl;

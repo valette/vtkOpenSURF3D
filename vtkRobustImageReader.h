@@ -1,6 +1,7 @@
 #ifndef __vtkRobustImageReader_h
 #define __vtkRobustImageReader_h
 
+#include <iostream>
 #include <sstream>
 
 #include <vtkImageData.h>
@@ -18,7 +19,10 @@
 // v2 : shift and scale values read by nifti reader when needed
 // v1
 
-class vtkRobustImageReader : public vtkObject 
+using std::cout;
+using std::endl;
+
+class vtkRobustImageReader : public vtkObject
 {
 
 public :
