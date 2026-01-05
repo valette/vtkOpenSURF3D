@@ -1,6 +1,6 @@
 [![CI](https://github.com/valette/vtkOpenSURF3D/actions/workflows/ci.yml/badge.svg)](https://github.com/valette/vtkOpenSURF3D/actions/workflows/ci.yml)
 
-vtkOpenSURF3D : a 3D implementation of Speeded Up Robust Features for VTK
+vtkOpenSURF3D 1.0: a 3D implementation of Speeded Up Robust Features for VTK
 =========================================================================
 
 ### Info ###
