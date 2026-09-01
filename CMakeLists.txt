@@ -1,7 +1,7 @@
 if( CMAKE_PARENT_LIST_FILE STREQUAL CMAKE_CURRENT_LIST_FILE )
   cmake_minimum_required(VERSION 3.30)
   project(vtkOpenSURF3D)
-  find_package(VTK REQUIRED COMPONENTS CommonSystem ImagingColor IOExport )
+  find_package(VTK REQUIRED COMPONENTS RenderingOpenGL2 CommonSystem ImagingColor IOExport )
   include_directories(${VTK_INCLUDE_DIRS})
 endif()
 
