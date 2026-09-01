@@ -38,6 +38,5 @@ if (BUILD_SURFMATCH)
   ADD_EXECUTABLE(match3d
     MainMatch.cxx
     MatchPoint.cxx)
-
   TARGET_LINK_LIBRARIES(match3d lapack blas ${VTK_LIBRARIES})
 endif (BUILD_SURFMATCH)
