@@ -969,13 +969,13 @@ cv::Matx44d* FastHessian::hessian4D(int d, int r, int c, ResponseLayer *t, Respo
 
 		dxy = ( m->getCornerResponse(r + 1, c + 1, d, t) - m->getCornerResponse(r + 1, c - 1, d, t) -
 				m->getCornerResponse(r - 1, c + 1, d, t) + m->getCornerResponse(r - 1, c - 1, d, t) ) / 4.0;
-		dxz = ( m->getCornerResponse(r + 1, c, d + 1, t) - m->getCornerResponse(r + 1, c, d - 1, t) -
-				m->getCornerResponse(r - 1, c, d + 1, t) + m->getCornerResponse(r - 1, c, d - 1, t) ) / 4.0;
+		dxz = ( m->getCornerResponse(r, c + 1, d + 1, t) - m->getCornerResponse(r, c + 1, d - 1, t) -
+				m->getCornerResponse(r, c - 1, d + 1, t) + m->getCornerResponse(r, c - 1, d - 1, t) ) / 4.0;
 		dxs = ( t->getCornerResponse(r, c + 1, d ) - t->getCornerResponse(r, c - 1, d) -
 				b->getCornerResponse(r, c + 1, d, t) + b->getCornerResponse(r, c - 1, d, t) ) / 4.0;
 
-		dyz = ( m->getCornerResponse(r, c + 1, d + 1, t) - m->getCornerResponse(r, c + 1, d - 1, t) -
-				m->getCornerResponse(r, c - 1, d + 1, t) + m->getCornerResponse(r, c - 1, d - 1, t) ) / 4.0;
+		dyz = ( m->getCornerResponse(r + 1, c, d + 1, t) - m->getCornerResponse(r + 1, c, d - 1, t) -
+				m->getCornerResponse(r - 1, c, d + 1, t) + m->getCornerResponse(r - 1, c, d - 1, t) ) / 4.0;
 		dys = ( t->getCornerResponse(r + 1, c, d) - t->getCornerResponse(r - 1, c, d) -
 				b->getCornerResponse(r + 1, c, d, t) + b->getCornerResponse(r - 1, c, d, t) ) / 4.0;
 
@@ -991,13 +991,13 @@ cv::Matx44d* FastHessian::hessian4D(int d, int r, int c, ResponseLayer *t, Respo
 
 		dxy = ( m->getResponse(r + 1, c + 1, d, t) - m->getResponse(r + 1, c - 1, d, t) -
 				m->getResponse(r - 1, c + 1, d, t) + m->getResponse(r - 1, c - 1, d, t) ) / 4.0;
-		dxz = ( m->getResponse(r + 1, c, d + 1, t) - m->getResponse(r + 1, c, d - 1, t) -
-				m->getResponse(r - 1, c, d + 1, t) + m->getResponse(r - 1, c, d - 1, t) ) / 4.0;
+		dxz = ( m->getResponse(r, c + 1, d + 1, t) - m->getResponse(r, c + 1, d - 1, t) -
+				m->getResponse(r, c - 1, d + 1, t) + m->getResponse(r, c - 1, d - 1, t) ) / 4.0;
 		dxs = ( t->getResponse(r, c + 1, d ) - t->getResponse(r, c - 1, d) -
 				b->getResponse(r, c + 1, d, t) + b->getResponse(r, c - 1, d, t) ) / 4.0;
 
-		dyz = ( m->getResponse(r, c + 1, d + 1, t) - m->getResponse(r, c + 1, d - 1, t) -
-				m->getResponse(r, c - 1, d + 1, t) + m->getResponse(r, c - 1, d - 1, t) ) / 4.0;
+		dyz = ( m->getResponse(r + 1, c, d + 1, t) - m->getResponse(r + 1, c, d - 1, t) -
+				m->getResponse(r - 1, c, d + 1, t) + m->getResponse(r - 1, c, d - 1, t) ) / 4.0;
 		dys = ( t->getResponse(r + 1, c, d) - t->getResponse(r - 1, c, d) -
 				b->getResponse(r + 1, c, d, t) + b->getResponse(r - 1, c, d, t) ) / 4.0;
 
