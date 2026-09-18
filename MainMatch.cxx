@@ -26,32 +26,43 @@ int main( int argc, char *argv[] )
 	
 	while (argumentsIndex < argc) {
 		char* key = argv[argumentsIndex];
+
+		if (strcmp(key, "-i") == 0) {
+			writeInliers = true;
+			argumentsIndex += 1;
+			continue;
+		}
+
+		if (argumentsIndex + 1 >= argc) {
+			std::cerr << "Error: Missing value for option " << key << std::endl;
+			return 1;
+		}
+
 		char *value = argv[argumentsIndex + 1];
 
 		if (strcmp(key, "-Rd") == 0) {
 			RansacDist = atof(value);
 		}
-		if (strcmp(key, "-Ri") == 0) {
+		else if (strcmp(key, "-Ri") == 0) {
 			RansacMinInliers = atoi(value);
 		}
-		if (strcmp(key, "-Md") == 0) {
+		else if (strcmp(key, "-Md") == 0) {
 			MatchingDist = atof(value);
 		}
-		if (strcmp(key, "-Md2") == 0) {
+		else if (strcmp(key, "-Md2") == 0) {
 			MatchingDist2Second = atof(value);
 		}
-		if (strcmp(key, "-Ms") == 0) {
+		else if (strcmp(key, "-Ms") == 0) {
 			MatchingScale = atof(value);
 		}
-		if (strcmp(key, "-b") == 0) {
+		else if (strcmp(key, "-b") == 0) {
 			computeBoxes = atoi(value);
 		}
-		if (strcmp(key, "-bb") == 0) {
+		else if (strcmp(key, "-bb") == 0) {
 			bbox = value;
 		}
-		if (strcmp(key, "-i") == 0) {
-			writeInliers = true;
-			argumentsIndex -= 1;
+		else {
+			std::cerr << "Warning: Unknown option " << key << std::endl;
 		}
 		
 		argumentsIndex += 2;

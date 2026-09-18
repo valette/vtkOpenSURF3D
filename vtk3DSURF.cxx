@@ -385,7 +385,18 @@ void vtk3DSURF::WritePoints(const char *fileName) {
 		jdimensions.push_back(value((double)dimensions[i]));
 	}
 
+	double boundsArray[ 6 ];
+	this->Cast->GetBounds( boundsArray );
+	picojson::object bounds;
+	bounds[ "xmin" ] = picojson::value( boundsArray[ 0 ] );
+	bounds[ "xmax" ] = picojson::value( boundsArray[ 1 ] );
+	bounds[ "ymin" ] = picojson::value( boundsArray[ 2 ] );
+	bounds[ "ymax" ] = picojson::value( boundsArray[ 3 ] );
+	bounds[ "zmin" ] = picojson::value( boundsArray[ 4 ] );
+	bounds[ "zmax" ] = picojson::value( boundsArray[ 5 ] );
+
 	object root;
+	root["bounds"] = value(bounds);
 	root["origin"] = value(jorigin);
 	root["spacing"] = value(jspacing);
 	root["dimensions"] = value(jdimensions);

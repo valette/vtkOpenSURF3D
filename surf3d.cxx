@@ -17,7 +17,7 @@
 int main( int argc, char *argv[] )
 {
 
-	if (argc < 2) {
+	if (argc < 2 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
 		cout << "Usage : surf3d file [options]" << endl;
 		cout << "Available options:" << endl;
 		cout << "-bin 0/1       : write points as bin file. Default : 0" << endl;
@@ -25,12 +25,17 @@ int main( int argc, char *argv[] )
 		cout << "-cmin value    : clamp values lower than specified value" << endl;
 		cout << "-cmax value    : clamp values larger than specified value" << endl;
 		cout << "-csvgz 0/1     : write points as csv.gz file. Default : 1" << endl;
+		cout << "-d maxsize     : set maximum size for isotropic resampling" << endl;
 		cout << "-gz opts       : set gz options such as compression level" << endl;
-		cout << "-precision n   : set coefficients precision in csv.gz file" << endl;
-		cout << "-json 0/1      : write points as json file. Default : 0" << endl;
+		cout << "-m maskfile    : set mask image file" << endl;
 		cout << "-n number      : maximum number of points" << endl;
 		cout << "-normalize 0/1 : normalize descriptors (default : 1 )" << endl;
+		cout << "-nt threads    : number of threads" << endl;
 		cout << "-o basename    : set output file name. Default: \"points\"" << endl;
+		cout << "-p pointfile   : use pre-existing points file" << endl;
+		cout << "-pad value     : set mirror padding in voxels" << endl;
+		cout << "-precision n   : set coefficients precision in csv.gz file" << endl;
+		cout << "-json 0/1      : write points as json file. Default : 0" << endl;
 		cout << "-r radius      : descriptor volume radius. Default : 5" << endl;
 		cout << "-s spacing     : resample input image to isotropic sampling with given spacing" << endl;
 		cout << "-t threshold   : set detector threshold. Default: 0" << endl;
@@ -38,7 +43,7 @@ int main( int argc, char *argv[] )
 		cout << "       0 : SURF3D descriptor (default). Descriptor size : 48" << endl;
 		cout << "       1 : subvolume HAAR coefficients. Descriptor size : 24 * radius^3" << endl;
 		cout << "       2 : subvolume raw voxels. Descriptor size : 8 * radius^3" << endl;
-		exit(1);
+		return (argc < 2 ? 1 : 0);
 	}
 
 	double spacing = 0;
@@ -69,6 +74,10 @@ int main( int argc, char *argv[] )
 	int argumentsIndex = 2;
 	while (argumentsIndex < argc) {
 		char *key = argv[argumentsIndex];
+		if (argumentsIndex + 1 >= argc) {
+			cerr << "Error: Missing value for option " << key << endl;
+			return 1;
+		}
 		char *value = argv[argumentsIndex+1];
 
 		if (strcmp(key,"-d") == 0) {
@@ -264,21 +273,6 @@ int main( int argc, char *argv[] )
 	SURF->SetSubVolumeRadius(subVolumeRadius);
 	SURF->SetNbThread(numberOfThreads);
 
-	double boundsArray[ 6 ];
-	image->GetBounds( boundsArray );
-	picojson::object root, bounds;
-	bounds[ "xmin" ] = picojson::value( boundsArray[ 0 ] );
-	bounds[ "xmax" ] = picojson::value( boundsArray[ 1 ] );
-	bounds[ "ymin" ] = picojson::value( boundsArray[ 2 ] );
-	bounds[ "ymax" ] = picojson::value( boundsArray[ 3 ] );
-	bounds[ "zmin" ] = picojson::value( boundsArray[ 4 ] );
-	bounds[ "zmax" ] = picojson::value( boundsArray[ 5 ] );
-	root[ "bounds" ] = picojson::value( bounds );
-
-	ofstream boundsFile;
-	boundsFile.open( outfilename+".json" , std::ofstream::out | std::ofstream::trunc );
-	boundsFile << picojson::value( root );
-	boundsFile.close();
 
 	if ( pointFile ) {
 
