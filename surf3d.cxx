@@ -164,6 +164,10 @@ int main( int argc, char *argv[] )
 	imageReader->SetFileName(argv[1]) ;
 	imageReader->Update() ;
 	vtkSmartPointer<vtkImageData> image = imageReader->GetOutput();
+	if (!image) {
+		std::cerr << "Failed to load input image: " << argv[1] << std::endl;
+		return 5;
+	}
 	vtkSmartPointer<vtkImageData> mask;
 
 	if (maskfilename)
