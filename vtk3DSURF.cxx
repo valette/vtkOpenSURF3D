@@ -35,8 +35,13 @@ void vtk3DSURF::ReadIPoints() {
 
     std::string line;
     this->points.clear();
+	if ( !this->PointFile || !this->Cast ) return;
 	std::cout << "Read : " << this->PointFile << std::endl;
 	ifstream file( this->PointFile );
+	if ( !file.is_open() ) {
+		std::cerr << "Error : cannot open point file " << this->PointFile << std::endl;
+		return;
+	}
 
 	double origin[ 3 ], spacing[ 3 ], bounds[ 6 ];
 	vtkBoundingBox box;
@@ -342,6 +347,7 @@ VTK_THREAD_RETURN_TYPE vtk3DSURF::ThreadedSubVolumes (void *arg) {
 
 void vtk3DSURF::WritePoints(const char *fileName) {
 
+	if (!this->Cast) return;
 	double origin[3];
 	double spacing[3];
 	int dimensions[3];
@@ -387,6 +393,10 @@ void vtk3DSURF::WritePoints(const char *fileName) {
 
 	ofstream pointsFile;
 	pointsFile.open(fileName, std::ofstream::out | std::ofstream::trunc);
+	if (!pointsFile.is_open()) {
+		std::cerr << "Error: cannot open output file " << fileName << std::endl;
+		return;
+	}
 	pointsFile << value(root);
 	pointsFile.close();
 }
@@ -394,6 +404,7 @@ void vtk3DSURF::WritePoints(const char *fileName) {
 
 void vtk3DSURF::WritePointsCSV(const char *fileName) {
 
+	if (!this->Cast) return;
 	double origin[3];
 	double spacing[3];
 	int dimensions[3];
@@ -406,8 +417,12 @@ void vtk3DSURF::WritePointsCSV(const char *fileName) {
 
 	ofstream pointsFile;
 	pointsFile.open(fileName, std::ofstream::out | std::ofstream::trunc);
+	if (!pointsFile.is_open()) {
+		std::cerr << "Error: cannot open output file " << fileName << std::endl;
+		return;
+	}
 		
-	for (int i = 0; i != this->points.size(); i++) {
+	for (size_t i = 0; i != this->points.size(); i++) {
 		Ipoint &point = this->points[i];
 		
 		pointsFile <<  point.x * spacing[0] + origin[0] << ",";
@@ -416,7 +431,7 @@ void vtk3DSURF::WritePointsCSV(const char *fileName) {
 		pointsFile <<  point.scale * Sspacing           << ",";
 		pointsFile <<  point.laplacian                  << ",";
 		pointsFile <<  point.response                   << ",";
-		for (int k = 0; k < point.descriptor.size(); k++) {
+		for (size_t k = 0; k < point.descriptor.size(); k++) {
 			pointsFile <<  point.descriptor[k];
 			if (k<point.descriptor.size() - 1) pointsFile << ",";
 		}
@@ -428,6 +443,7 @@ void vtk3DSURF::WritePointsCSV(const char *fileName) {
 
 void vtk3DSURF::WritePointsCSVGZ(const char *fileName, const char *gzOpts, int precision ) {
 
+	if (!this->Cast) return;
 	double origin[ 3 ];
 	double spacing[ 3 ];
 	int dimensions[ 3 ];
@@ -441,6 +457,10 @@ void vtk3DSURF::WritePointsCSVGZ(const char *fileName, const char *gzOpts, int p
 	if ( gzOpts ) opts += gzOpts;
 
 	gzFile gz = gzopen( fileName, opts.c_str() );
+	if (!gz) {
+		std::cerr << "Error: cannot open output file " << fileName << std::endl;
+		return;
+	}
 	string coeff( "%f," ), coeffEnd( "%f" );
 
 	if ( precision >= 0 ) {
@@ -450,7 +470,7 @@ void vtk3DSURF::WritePointsCSVGZ(const char *fileName, const char *gzOpts, int p
 		coeff = coeffEnd + ",";
 	}
 
-	for ( int i = 0; i != this->points.size(); i++) {
+	for ( size_t i = 0; i != this->points.size(); i++) {
 
 		Ipoint &point = this->points[ i ];
 		gzprintf( gz, "%f,", point.x * spacing[ 0 ] + origin[ 0 ] );
@@ -460,7 +480,7 @@ void vtk3DSURF::WritePointsCSVGZ(const char *fileName, const char *gzOpts, int p
 		gzprintf( gz, "%d,", point.laplacian );
 		gzprintf( gz, "%f,", point.response );
 
-		for (int k = 0; k < point.descriptor.size(); k++) {
+		for (size_t k = 0; k < point.descriptor.size(); k++) {
 
 			if ( k < point.descriptor.size() - 1 ) {
 
@@ -485,6 +505,7 @@ void vtk3DSURF::WritePointsCSVGZ(const char *fileName, const char *gzOpts, int p
 
 void vtk3DSURF::WritePointsBinary(const char *fileName) {
 
+	if (!this->Cast) return;
 	double origin[3];
 	double spacing[3];
 	int dimensions[3];
@@ -495,9 +516,13 @@ void vtk3DSURF::WritePointsBinary(const char *fileName) {
 
 	double Sspacing = pow(spacing[0]*spacing[1]*spacing[2], 1.0/3);
 	FILE * file = fopen(fileName,"wb");
+	if (!file) {
+		std::cerr << "Error: cannot open output file " << fileName << std::endl;
+		return;
+	}
 	float valF;
 
-	for (int i = 0; i != this->points.size(); i++) {
+	for (size_t i = 0; i != this->points.size(); i++) {
 		Ipoint &point = this->points[i];
 		valF =  point.x * spacing[0] + origin[0];
 		fwrite(&valF, sizeof(float), 1, file);
@@ -511,7 +536,9 @@ void vtk3DSURF::WritePointsBinary(const char *fileName) {
 		fwrite(&valF, sizeof(float), 1, file);
 		valF =  point.response;
 		fwrite(&valF, sizeof(float), 1, file);
-		fwrite(&point.descriptor[0], sizeof(float), point.descriptor.size(), file);
+		if (!point.descriptor.empty()) {
+			fwrite(&point.descriptor[0], sizeof(float), point.descriptor.size(), file);
+		}
 	}
 
 	fclose(file);
