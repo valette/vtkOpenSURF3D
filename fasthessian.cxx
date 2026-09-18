@@ -538,7 +538,7 @@ int FastHessian::isExtremum(int r, int c, int d, ResponseLayer *t, ResponseLayer
 		  // if any response in 3x3x3x3 is greater candidate not maximum (only if isblob == true)
 		  if (
 			(t->getResponse(r+rr, c+cc, d+dd)    >= candidate && param != LAST_SCALE  && t->getIsblob(r+rr, c+cc, d+dd)) ||
-			(m->getResponse(r+rr, c+cc, d+dd, t) >= candidate && (rr != 0 || cc != 0) && m->getIsblob(r+rr, c+cc, d+dd, t)) ||
+			(m->getResponse(r+rr, c+cc, d+dd, t) >= candidate && (rr != 0 || cc != 0 || dd != 0) && m->getIsblob(r+rr, c+cc, d+dd, t)) ||
 			(b->getResponse(r+rr, c+cc, d+dd, t) >= candidate && param != FIRST_SCALE && b->getIsblob(r+rr, c+cc, d+dd, t))
 			)
 				return 0;
@@ -567,7 +567,7 @@ int FastHessian::isCornerExtremum(int r, int c, int d, ResponseLayer *t, Respons
 		  // if any response in 3x3x3x3 is greater candidate not maximum (only if isblob == true)
 		  if (
 			(t->getCornerResponse(r+rr, c+cc, d+dd)    >= candidate && param != LAST_SCALE) ||
-			(m->getCornerResponse(r+rr, c+cc, d+dd, t) >= candidate && (rr != 0 || cc != 0) ) ||
+			(m->getCornerResponse(r+rr, c+cc, d+dd, t) >= candidate && (rr != 0 || cc != 0 || dd != 0) ) ||
 			(b->getCornerResponse(r+rr, c+cc, d+dd, t) >= candidate && param != FIRST_SCALE )
 			)
 
