@@ -159,8 +159,6 @@ void FastHessian::getIpoints()
 
 	Timer->StartTimer();
 
-	int layer_min = filter_map[0][0];
-	int layer_max = filter_map[octaves][2];
 
   // Get the response layers
   ResponseLayer *b, *m, *t;
