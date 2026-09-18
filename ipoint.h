@@ -13,8 +13,8 @@
 #define IPOINT_H
 
 #include <vector>
-#include <math.h>
-
+#include <cmath>
+#include <algorithm>
 
 //-------------------------------------------------------
 
@@ -24,29 +24,34 @@ typedef std::vector<std::pair<int, int> > IpPairVec;
 
 //-------------------------------------------------------
 
-
 class Ipoint {
 
 public:
 
   //! Constructor
-  Ipoint() : response(0), laplacian(0), scale(0) {};
+  Ipoint() : x(0.0f), y(0.0f), z(0.0f), scale(0.0f), response(0.0f), laplacian(0) {}
 
   //! Gets the distance in descriptor space between Ipoints
-  float operator-(const Ipoint &rhs)
+  float operator-(const Ipoint &rhs) const
   {
-    float sum=0.f;
-    for(int i=0; i < this->descriptor.size(); ++i)
-      sum += (this->descriptor[i] - rhs.descriptor[i])*(this->descriptor[i] - rhs.descriptor[i]);
-    return sqrt(sum);
-  };
+    float sum = 0.0f;
+    size_t minSize = std::min(this->descriptor.size(), rhs.descriptor.size());
+    for(size_t i = 0; i < minSize; ++i)
+    {
+      float diff = this->descriptor[i] - rhs.descriptor[i];
+      sum += diff * diff;
+    }
+    return std::sqrt(sum);
+  }
 
   void allocate( int size ) {
     this->descriptor.resize( size );
   }
 
   //! Coordinates of the detected interest point
-  float x, y, z;
+  float x;
+  float y;
+  float z;
 
   //! Detected scale
   float scale;

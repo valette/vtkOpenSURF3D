@@ -26,13 +26,17 @@ class MatchPoint {
 
 public:
   //! Constructor
-  MatchPoint():RansacDist(50), 
+  MatchPoint(): RansacDist(50), 
 				RansacMinInliers(2), 
 				MatchingDist(0.95), 
 				MatchingDist2Second(0.98),
 				MatchingScale(1.5),
+				maxinlier(0),
 				echec(false),
-				useBBoxin(false) {};
+				nbPointInA(0),
+				nbPointInB(0),
+				useBBoxin(false),
+				computeBoundingBoxes(false) {};
   
   
 	    //! Save the parameters

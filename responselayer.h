@@ -9,8 +9,9 @@
 *                                                          *
 ************************************************************/
 
-#include <memory.h>
-#include <assert.h>
+#include <cstring>
+#include <cassert>
+#include <cstddef>
 
 // x = width =  column
 // y = height = row
@@ -31,6 +32,9 @@ public:
     // 2 : corner
   bool *isblob;
 
+  ResponseLayer(const ResponseLayer&) = delete;
+  ResponseLayer& operator=(const ResponseLayer&) = delete;
+
   ResponseLayer(int width, int height, int depth, int step, int filter)
   {
     assert(width > 0 && height > 0 && depth > 0);
@@ -41,84 +45,62 @@ public:
     this->step = step;
     this->filter = filter;
 
-    responses = new float[width*height*depth];
-    cornerResponses = new float[width*height*depth];
-    laplacian = new unsigned char[width*height*depth];
-    isblob    = new bool[width*height*depth];
-
-    memset(responses,0,sizeof(float)*width*height*depth);
-    //memset(laplacian,0,sizeof(unsigned char)*width*height*depth);
-    //memset(isblob,0,sizeof(bool)*width*height*depth);
+    size_t total = static_cast<size_t>(width) * static_cast<size_t>(height) * static_cast<size_t>(depth);
+    responses = new float[total]();
+    cornerResponses = new float[total]();
+    laplacian = new unsigned char[total]();
+    isblob    = new bool[total]();
   }
 
   ~ResponseLayer()
   {
-    if (responses) delete [] responses;
-    if (cornerResponses) delete [] cornerResponses;
-    if (laplacian) delete [] laplacian;
-    if (isblob) delete [] isblob;
+    delete [] responses;
+    delete [] cornerResponses;
+    delete [] laplacian;
+    delete [] isblob;
   }
 
   inline unsigned char getLaplacian(unsigned int row, unsigned int column, unsigned int layer)
   {
-	//assert(row < height && width > column && depth >  layer);
     return laplacian[column + row * width + layer * width * height];
   }
 
   inline unsigned char getLaplacian(unsigned int row, unsigned int column, unsigned int layer, ResponseLayer *src)
   {
     int scale = this->width / src->width;
-
-    //assert(scale*row < height && width > scale*column && depth >  scale*layer);
-
     return laplacian[(scale*column) + (scale*row) * width + (scale*layer) * width * height];
   }
 
   inline float getResponse(unsigned int row, unsigned int column, unsigned int layer)
   {
-	  	//assert(row < height && width > column && depth >  layer);
-
     return responses[column + row * width + layer * width * height];
   }
 
   inline float getResponse(unsigned int row, unsigned int column, unsigned int layer, ResponseLayer *src)
   {
     int scale = this->width / src->width;
-
-    //assert(scale*row < height && width > scale*column && depth >  scale*layer);
-
     return responses[(scale*column) + (scale*row) * width + (scale*layer) * width * height];
   }
 
   inline float getCornerResponse(unsigned int row, unsigned int column, unsigned int layer)
   {
-      //assert(row < height && width > column && depth >  layer);
-
     return cornerResponses[column + row * width + layer * width * height];
   }
 
   inline float getCornerResponse(unsigned int row, unsigned int column, unsigned int layer, ResponseLayer *src)
   {
     int scale = this->width / src->width;
-
-    //assert(scale*row < height && width > scale*column && depth >  scale*layer);
-
     return cornerResponses[(scale*column) + (scale*row) * width + (scale*layer) * width * height];
   }
 
-  inline float getIsblob(unsigned int row, unsigned int column, unsigned int layer)
+  inline bool getIsblob(unsigned int row, unsigned int column, unsigned int layer)
   {
-	//assert(row < height && width > column && depth >  layer);
-
     return isblob[column + row * width + layer * width * height];
   }
 
-  inline float getIsblob(unsigned int row, unsigned int column, unsigned int layer, ResponseLayer *src)
+  inline bool getIsblob(unsigned int row, unsigned int column, unsigned int layer, ResponseLayer *src)
   {
     int scale = this->width / src->width;
-
-    //assert(scale*row < height && width > scale*column && depth >  scale*layer);
-
     return isblob[(scale*column) + (scale*row) * width + (scale*layer) * width * height];
   }
 
