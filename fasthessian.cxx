@@ -436,11 +436,11 @@ void FastHessian::buildResponseLayer(int id, int decile)
 				float Ix = + (float) BoxIntegralOptim(img, 	x - l, 	y-l+1,	z-l+1,	l, 		2*l-1,	2*l-1, 		incs, dim, pin_tegral)
 					+ (float) BoxIntegralOptim(img, 	x + 1, 	y-l+1, 	z-l+1,	l, 		2*l-1,	2*l-1, 		incs, dim, pin_tegral);
 
-				float Iy = + (float) BoxIntegralOptim(img, 	x-l+1, 	y - l,	z-l+1,	l*l-1, 		l,	2*l-1, 		incs, dim, pin_tegral)
-					+ (float) BoxIntegralOptim(img, 	x-l+1, 	y + 1, 	z-l+1,	l*l-1, 		l,	2*l-1, 		incs, dim, pin_tegral);
+				float Iy = + (float) BoxIntegralOptim(img, 	x-l+1, 	y - l,	z-l+1,	2*l-1, 	l,		2*l-1, 		incs, dim, pin_tegral)
+					+ (float) BoxIntegralOptim(img, 	x-l+1, 	y + 1, 	z-l+1,	2*l-1, 	l,		2*l-1, 		incs, dim, pin_tegral);
 
-				float Iz = + (float) BoxIntegralOptim(img, 	x-l+1, 	y-l+1,	z - l,	l*l-1, 		2*l-1,	l, 		incs, dim, pin_tegral)
-					+ (float) BoxIntegralOptim(img, 	x-l+1, 	y-l+1, 	z + 1,	l*l-1, 		2*l-1,	l, 		incs, dim, pin_tegral);
+				float Iz = + (float) BoxIntegralOptim(img, 	x-l+1, 	y-l+1,	z - l,	2*l-1, 	2*l-1,	l, 			incs, dim, pin_tegral)
+					+ (float) BoxIntegralOptim(img, 	x-l+1, 	y-l+1, 	z + 1,	2*l-1, 	2*l-1,	l, 			incs, dim, pin_tegral);
 #endif
 		//Quand rien dans la dim : dim = r-l+1 		size = 2*l-1
 
@@ -458,29 +458,16 @@ void FastHessian::buildResponseLayer(int id, int decile)
 			  laplacian[index] = (Dxx + Dyy + Dzz >= 0 ? 1 : 0);
 
 #ifdef EXTRACT_CORNER
-/*
-				float CornerDet =+ Ix*Ix * (Iy*Iy * Iz*Iz - Iz*Iy * Iy*Iz)
-                         - Ix*Iy * (Iy*Ix * Iz*Iz - Iy*Iz * Iz*Ix)
-                         + Ix*Iz * (Iy*Ix * Iz*Iy - Iy*Iy * Iz*Ix);
-*/
-				float eigs[3];
-				float a[] = {
-				Ix*Ix , Ix*Iy , Ix*Iz ,
-				Ix*Iy , Iy*Iy  ,Iy*Iz  ,
-				Ix*Iz , Iy*Iz ,  Iz*Iz };
-
-				CvMat mat = cvMat(3,3,CV_32FC1, a);
-				CvMat* evec  = cvCreateMat(3,3,CV_32FC1);
-				CvMat* eval  = cvCreateMat(3,1,CV_32FC1);
-
-				cvZero(evec);
-				cvZero(eval);
-
-				cvEigenVV(&mat, evec, eval, DBL_EPSILON, -1, -1);
-
-			  //EigenValue(Ix*Ix, Iy*Iy, Iz*Iz, Ix*Iy, Iy*Iz, Ix*Iz, eigs);
-				//cornerResponses[index] = std::min(std::min(abs(eigs[0]), abs(eigs[1])), abs(eigs[2])) * inverse_volume_cube;
-				cornerResponses[index] = std::min(std::min(cvGet2D(&mat,0,0).val[0], cvGet2D(&mat,0,1).val[0]), cvGet2D(&mat,0,2).val[0]) * 1.f/((float)w*(float)w*(float)w*(float)w*(float)w*(float)w);
+				cv::Matx33f structTensor(
+					Ix*Ix, Ix*Iy, Ix*Iz,
+					Ix*Iy, Iy*Iy, Iy*Iz,
+					Ix*Iz, Iy*Iz, Iz*Iz
+				);
+				cv::Vec3f eigs;
+				cv::eigen(structTensor, eigs);
+				float minEig = std::min({std::abs(eigs[0]), std::abs(eigs[1]), std::abs(eigs[2])});
+				float normFactor = 1.0f / (std::pow(static_cast<float>(w), 6.0f));
+				cornerResponses[index] = minEig * normFactor;
 #endif
 			}
 		}
