@@ -232,27 +232,34 @@ void FastHessian::getIpoints()
 
 
 	//Remove OutMask Point
-	if (Mask != 0) // && false)
+	if (Mask != 0)
 	{
 		cout << ipts.size() << " Ipoints before removal" << endl;
 
+		int maskDims[3];
+		Mask->GetDimensions(maskDims);
+
 		vector<Ipoint>::iterator it = ipts.begin();
 
-		while (it!=ipts.end())
+		while (it != ipts.end())
 		{
 			bool flag = false;
 
-			for (float i = -1 ; i < 2 ; i++)
+			for (int i = -1; i <= 1; i++)
 			{
-				for (float j = -1 ; j < 2 ; j++)
+				for (int j = -1; j <= 1; j++)
 				{
-					for (float k = -1 ; k < 2 ; k++)
+					for (int k = -1; k <= 1; k++)
 					{
-						if ( * static_cast<unsigned char*>(Mask->GetScalarPointer(
-								it->x + i * 0 * it->scale,
-								it->y + j * 0 * it->scale,
-								it->z + k * 0 * it->scale)) == 0)
-								{
+						int vx = static_cast<int>(std::round(it->x + i * it->scale));
+						int vy = static_cast<int>(std::round(it->y + j * it->scale));
+						int vz = static_cast<int>(std::round(it->z + k * it->scale));
+
+						if (vx < 0 || vx >= maskDims[0] ||
+							vy < 0 || vy >= maskDims[1] ||
+							vz < 0 || vz >= maskDims[2] ||
+							*static_cast<unsigned char*>(Mask->GetScalarPointer(vx, vy, vz)) == 0)
+						{
 							it = ipts.erase(it);
 							flag = true;
 							break;
@@ -264,7 +271,7 @@ void FastHessian::getIpoints()
 			}
 			if (!flag) it++;
 		}
-			cout << ipts.size() << " Ipoints after removal" << endl;
+		cout << ipts.size() << " Ipoints after removal" << endl;
 	}
 	else {
 		cout << " Ipoints : " << ipts.size() << endl;
