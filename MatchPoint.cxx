@@ -50,7 +50,7 @@ void MatchPoint::Parse(const char *fileName, int id) {
 		point.y 		= p["y"].get<double>();
 		point.z 		= p["z"].get<double>();
 		picojson::array t = p["descriptor"].get<picojson::array>();
-		point.allocate( t.size() );
+		point.descriptor.reserve( t.size() );
 		for ( const auto & m : t ) point.descriptor.push_back( m.get<double>() );
 		this->points[id].push_back(point);
     }
