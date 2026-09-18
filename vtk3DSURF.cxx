@@ -110,20 +110,12 @@ void vtk3DSURF::Update() {
 
 			double spacing[3];
 			temp->GetSpacing(spacing);
-			double lmin = (double) dimensions[0] * spacing[0];
-			int imin = 0, imin2 = 0;
-			double lmin2 = lmin;
-
-			for (int i = 1; i < 3; i++) {
-				double length = (double) dimensions[i] * spacing[i];
-				if (length < lmin) {
-					lmin2 = lmin;
-					imin2 = imin;
-
-					lmin = length;
-					imin = i;
-				}
+			double lengths[3];
+			for (int i = 0; i < 3; i++) {
+				lengths[i] = (double) dimensions[i] * spacing[i];
 			}
+			std::sort(lengths, lengths + 3);
+			double lmin2 = lengths[1];
 
 			newSpacing = (double) lmin2 / MaxSize;
 		}
