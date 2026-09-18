@@ -1,0 +1,33 @@
+# Build directories and CMake files
+CMakeFiles/
+CMakeCache.txt
+Makefile
+Makefile*
+cmake_install.cmake
+*.cmake
+!CMakeLists.txt
+compile_commands.json
+
+# Binaries and object files
+*.o
+*.a
+*.so
+surf3d
+match3d
+
+# Output data and test files
+*.csv
+*.csv.gz
+*.bin
+*.json
+*.old
+*.nii
+*.nii.gz
+*.mhd
+*.raw
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.swp
+*~
