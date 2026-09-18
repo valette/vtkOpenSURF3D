@@ -26,6 +26,7 @@
 #include "picojson.h"
 
 using namespace picojson;
+using namespace std;
 
 vtkStandardNewMacro(vtk3DSURF);
 

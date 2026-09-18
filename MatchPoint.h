@@ -10,8 +10,6 @@
 #include <TooN/sim3.h>
 #include <TooN/SVD.h>
 
-using namespace picojson;
-using namespace TooN;
 
 class Box3 {
 public:
@@ -71,7 +69,7 @@ private:
 	float MatchingDist2Second;
 	float MatchingScale;
 	IpPairVec matches;
-	SIM3<double> BestTransform;
+	TooN::SIM3<double> BestTransform;
 	int maxinlier;
 	bool echec;
 	Box3 bboxAmax, bboxBmax;

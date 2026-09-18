@@ -11,6 +11,7 @@
 
 using namespace picojson;
 using namespace std;
+using namespace TooN;
 
 void MatchPoint::Parse(const char *fileName, int id) {
 	

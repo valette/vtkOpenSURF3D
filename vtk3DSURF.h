@@ -6,8 +6,6 @@
 #include <vtkSmartPointer.h>
 #include "ipoint.h"
 
-using namespace std;
-
 
 class vtk3DSURF : public vtkObject 
 {
@@ -38,8 +36,8 @@ public :
 	vtkSetMacro(Normalize, bool)
 	vtkGetMacro(Normalize, bool)
 
-	vtkSetMacro(PointFile, char*)
-	vtkGetMacro(PointFile, char*)
+	vtkSetStringMacro(PointFile)
+	vtkGetStringMacro(PointFile)
 
 	vtkSetMacro(Threshold, double)
 	vtkGetMacro(Threshold, double)
@@ -69,7 +67,7 @@ protected :
 	//! Get the long descriptors i.e. sub volumes
 	static VTK_THREAD_RETURN_TYPE ThreadedSubVolumes (void *arg);
 
-	vector<Ipoint> points;
+	std::vector<Ipoint> points;
 
 	vtkSmartPointer<vtkImageData> Input, Mask, Cast, Resized, Integral;
 
@@ -91,13 +89,15 @@ protected :
 		this->MaxSize = 100;
 		this->DescriptorType = 0;
 		this->NumberOfPoints = -1;
-		this->PointFile = 0;
+		this->PointFile = nullptr;
 		this->Spacing = 0;
 		this->SubVolumeRadius = 5;
 	}
 
 	/// the destructor
-	 ~vtk3DSURF() {}
+	~vtk3DSURF() override {
+		this->SetPointFile(nullptr);
+	}
 
 };
 #endif

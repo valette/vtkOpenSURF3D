@@ -19,8 +19,6 @@
 // v2 : shift and scale values read by nifti reader when needed
 // v1
 
-using std::cout;
-using std::endl;
 
 class vtkRobustImageReader : public vtkObject
 {
@@ -178,8 +176,6 @@ protected :
 		this->SetFileName(nullptr);
 	}
 };
-
-vtkStandardNewMacro(vtkRobustImageReader);
 
 #endif
 

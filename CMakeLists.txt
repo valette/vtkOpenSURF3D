@@ -1,42 +1,49 @@
-if( CMAKE_PARENT_LIST_FILE STREQUAL CMAKE_CURRENT_LIST_FILE )
-  cmake_minimum_required(VERSION 3.30)
-  project(vtkOpenSURF3D)
-  find_package(VTK REQUIRED COMPONENTS RenderingOpenGL2 CommonSystem ImagingColor IOExport )
-  include_directories(${VTK_INCLUDE_DIRS})
-endif()
+cmake_minimum_required(VERSION 3.16)
+project(vtkOpenSURF3D C CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(MPI COMPONENTS C CXX)
+find_package(VTK REQUIRED COMPONENTS RenderingOpenGL2 CommonSystem ImagingColor IOExport)
+include_directories(${VTK_INCLUDE_DIRS})
 
 find_package(OpenCV REQUIRED)
-find_package( ZLIB REQUIRED )
-
-option(EXTRACT_CORNER "Extract corner points")
-
-if(EXTRACT_CORNER)
-add_definitions( -DEXTRACT_CORNER )
-endif()
-
+find_package(ZLIB REQUIRED)
 find_package(OpenMP)
 
-if (OPENMP_FOUND)
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-endif (OPENMP_FOUND)
+option(EXTRACT_CORNER "Extract corner points" OFF)
+if(EXTRACT_CORNER)
+  add_definitions(-DEXTRACT_CORNER)
+endif()
 
-OPTION(BUILD_SURFMATCH "Build surf match program. Requires the Toon library." OFF)
+option(BUILD_SURFMATCH "Build surf match program. Requires the TooN library." OFF)
 
 include_directories(${ZLIB_INCLUDE_DIRS})
 
-ADD_EXECUTABLE(surf3d 
- surf3d.cxx  
- vtk3DSURF.cxx
- integral.cxx
- fasthessian.cxx
- surf.cxx)
+add_executable(surf3d 
+  surf3d.cxx  
+  vtk3DSURF.cxx
+  vtkRobustImageReader.cxx
+  integral.cxx
+  fasthessian.cxx
+  surf.cxx
+)
 
-TARGET_LINK_LIBRARIES(surf3d ${OpenCV_LIBS} ${VTK_LIBRARIES} ${ZLIB_LIBRARIES})
+target_link_libraries(surf3d PRIVATE ${OpenCV_LIBS} ${VTK_LIBRARIES} ${ZLIB_LIBRARIES})
+if(TARGET OpenMP::OpenMP_CXX)
+  target_link_libraries(surf3d PRIVATE OpenMP::OpenMP_CXX)
+elseif(OPENMP_FOUND)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
 
-if (BUILD_SURFMATCH)
-  ADD_EXECUTABLE(match3d
+if(BUILD_SURFMATCH)
+  add_executable(match3d
     MainMatch.cxx
-    MatchPoint.cxx)
-  TARGET_LINK_LIBRARIES(match3d lapack blas ${VTK_LIBRARIES})
-endif (BUILD_SURFMATCH)
+    MatchPoint.cxx
+  )
+  target_link_libraries(match3d PRIVATE lapack blas ${VTK_LIBRARIES})
+  if(TARGET OpenMP::OpenMP_CXX)
+    target_link_libraries(match3d PRIVATE OpenMP::OpenMP_CXX)
+  endif()
+endif()

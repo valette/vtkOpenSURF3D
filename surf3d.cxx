@@ -13,6 +13,8 @@
 #include "vtk3DSURF.h"
 #include "vtkRobustImageReader.h"
 #include "picojson.h"
+ 
+using namespace std;
 
 int main( int argc, char *argv[] )
 {
