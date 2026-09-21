@@ -1,12 +1,15 @@
-cmake_minimum_required(VERSION 3.16)
-project(vtkOpenSURF3D C CXX)
+if( CMAKE_PARENT_LIST_FILE STREQUAL CMAKE_CURRENT_LIST_FILE )
+  cmake_minimum_required(VERSION 3.30)
+  project(vtkOpenSURF3D C CXX)
+  project(vtkOpenSURF3D)
+  find_package(VTK REQUIRED COMPONENTS CommonSystem ImagingColor IOExport )
+  include_directories(${VTK_INCLUDE_DIRS})
+endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(MPI COMPONENTS C CXX)
-find_package(VTK REQUIRED COMPONENTS RenderingOpenGL2 CommonSystem ImagingColor IOExport)
-include_directories(${VTK_INCLUDE_DIRS})
+#find_package(MPI COMPONENTS C CXX)
 
 find_package(OpenCV REQUIRED)
 find_package(ZLIB REQUIRED)
@@ -21,10 +24,9 @@ option(BUILD_SURFMATCH "Build surf match program. Requires the TooN library." OF
 
 include_directories(${ZLIB_INCLUDE_DIRS})
 
-add_executable(surf3d 
-  surf3d.cxx  
+add_executable(surf3d
+  surf3d.cxx
   vtk3DSURF.cxx
-  vtkRobustImageReader.cxx
   integral.cxx
   fasthessian.cxx
   surf.cxx
