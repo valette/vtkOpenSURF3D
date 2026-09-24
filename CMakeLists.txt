@@ -1,7 +1,6 @@
 if( CMAKE_PARENT_LIST_FILE STREQUAL CMAKE_CURRENT_LIST_FILE )
   cmake_minimum_required(VERSION 3.30)
   project(vtkOpenSURF3D C CXX)
-  project(vtkOpenSURF3D)
   find_package(VTK REQUIRED COMPONENTS CommonSystem ImagingColor IOExport )
   include_directories(${VTK_INCLUDE_DIRS})
 endif()
@@ -9,9 +8,7 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-#find_package(MPI COMPONENTS C CXX)
-
-find_package(OpenCV REQUIRED)
+find_package(OpenCV REQUIRED COMPONENTS core)
 find_package(ZLIB REQUIRED)
 find_package(OpenMP)
 
