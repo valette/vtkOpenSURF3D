@@ -24,6 +24,15 @@ Which is a 3D extension of the SURF Paper :
 
 GNU GPL
 
+## Documentation
+
+Extensive developer documentation (architecture, algorithm, module reference,
+build, usage, output formats, matching and testing) is in the
+[`docs/`](docs/) directory. The [`AGENTS.md`](AGENTS.md) file summarizes the
+essential commands, conventions and gotchas for working with this codebase,
+and [`TODO.md`](TODO.md) is a severity-ordered audit of known bugs and
+improvements.
+
 ## Dependencies
 
 * CMAKE www.cmake.org
