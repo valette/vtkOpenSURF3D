@@ -49,9 +49,15 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: cmake --build . --parallel 2
 
+    - name: Verify build artifacts
+      run: |
+        ls -la build/surf3d
+        file build/surf3d
+
     - name: Copy built binaries to source root
       run: |
         cp build/surf3d source/
+        chmod +x source/surf3d
         ls -la source/surf3d
 
     - name: Run tests
