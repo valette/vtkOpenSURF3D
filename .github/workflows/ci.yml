@@ -32,10 +32,10 @@ jobs:
         lfs: 'false'
         submodules: 'recursive'
 
-    - name: Install opencv
+    - name: Install dependencies
       run: |
         apt-get update
-        apt-get -y install libopencv-dev
+        apt-get -y install libopencv-dev libpthread-stubs0-dev
 
     - name: Setup Directories
       working-directory: ${{github.workspace}}
@@ -63,4 +63,3 @@ jobs:
     - name: Run tests
       working-directory: ${{github.workspace}}/source
       run: ./test.sh
-
