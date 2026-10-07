@@ -1,6 +1,8 @@
 # vtkOpenSURF3D — Developer Documentation
 
 > **Last updated:** 2026-10-07
+> **Source commit:** `24b550f` (docs describe this commit; update this
+> reference whenever the documentation is refreshed to track code changes)
 
 This directory contains the technical documentation for **vtkOpenSURF3D**, a
 C++ implementation of 3D Speeded Up Robust Features (SURF) built on VTK.
