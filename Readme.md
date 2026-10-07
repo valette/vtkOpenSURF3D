@@ -97,11 +97,13 @@ git-ignored), so running the tests does not clutter the repository tree.
 
 Usage:
 
-    ./test.sh          # run the full battery on a single default image
-    ./test.sh all      # run the full battery on every image in niivue-images/
+    ./test.sh           # run the full battery on a single default image
+    ./test.sh -a        # run the full battery on every image in niivue-images/
+    ./test.sh -v        # verbose mode: stream program output to the terminal
 
 The exit code is 0 only if every test passed. Per-test logs are kept in
-`test_results/<test>.log` for inspection.
+`test_results/<test>.log` for inspection. In verbose mode (`-v`) the output
+is also streamed to the terminal (handy for debugging and CI).
 
 **Test data submodule.** The `niivue-images/` directory is a git submodule
 (https://github.com/neurolabusc/niivue-images) providing sample medical images

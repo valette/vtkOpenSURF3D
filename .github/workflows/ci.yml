@@ -62,4 +62,6 @@ jobs:
 
     - name: Run tests
       working-directory: ${{github.workspace}}/source
-      run: ./test.sh
+      run: |
+        export LD_LIBRARY_PATH=/opt/vtk/install/lib/:$LD_LIBRARY_PATH
+        ./test.sh -v

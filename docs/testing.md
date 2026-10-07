@@ -8,7 +8,6 @@ CTest integration; the suite is invoked directly from the shell.
 ---
 
 ## Prerequisites
-
 - A built `surf3d` binary at the repository root.
 - The `niivue-images` test-data directory containing at least
   `niivue-images/CT_Abdo.nii.gz`. This is provided as a **git submodule** and
@@ -29,17 +28,32 @@ If the directory is missing, `test.sh` prints an error and exits (code 2).
 ./test.sh
 
 # Test against every image in niivue-images/
-./test.sh all
+./test.sh -a
+
+# Verbose mode: stream each program's console output to the terminal
+./test.sh -v
+
+# Options are combinable and order-independent
+./test.sh -a -v
 ```
 
 Exit code is `0` only if every test passed.
+
+### Options
+
+| Option | Meaning |
+|--------|---------|
+| `-a` | run against every image in `niivue-images/` |
+| `-v` | verbose mode: stream program console output to the terminal (also useful in CI) |
+
+Unknown options print the usage line and exit with a non-zero code.
 
 ### Modes
 
 | Mode | Coverage |
 |------|----------|
 | `./test.sh` | 24 tests against `CT_Abdo.nii.gz` |
-| `./test.sh all` | baseline detection on every image in `niivue-images/` + the 24 standard tests |
+| `./test.sh -a` | baseline detection on every image in `niivue-images/` + the 24 standard tests |
 
 ---
 
@@ -76,6 +90,11 @@ Two helpers implement the checks:
 All command output is captured to `test_results/<name>.log` for inspection,
 and produced artifacts stay inside `test_results/` (which is git-ignored),
 keeping the repository tree clean.
+
+In **verbose mode** (`-v`), the command output is additionally streamed to
+the terminal via `tee`, so it appears live on the console while still being
+written to the per-test log. This is convenient for debugging and for CI
+logs.
 
 ### match3d special handling
 

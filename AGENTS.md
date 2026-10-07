@@ -46,7 +46,8 @@ git submodule update --init --recursive
 
 # Run the test suite (must pass before/after changes)
 ./test.sh          # 24 tests, default image
-./test.sh all      # 40 tests, every image in niivue-images/
+./test.sh -a       # 40 tests, every image in niivue-images/
+./test.sh -v       # verbose mode: stream program output to the terminal
 ```
 
 > There is **no `make test` / `ctest`** — the check command is `./test.sh`.
@@ -135,7 +136,7 @@ Before touching any of these, read the matching section of `TODO.md`.
 1. Read the relevant module in `docs/modules.md` first.
 2. Make the change, keeping conventions above.
 3. Build with `-Wall -Wextra` and fix new warnings in the touched code.
-4. Run `./test.sh` (and `./test.sh all` if feasible) and confirm all pass.
+4. Run `./test.sh` (and `./test.sh -a` if feasible) and confirm all pass.
 5. Do not commit unless asked.
 
 ---
@@ -145,5 +146,5 @@ Before touching any of these, read the matching section of `TODO.md`.
 - [ ] `cmake --build build --parallel` succeeds.
 - [ ] No new compiler warnings in modified files.
 - [ ] `./test.sh` → all PASS.
-- [ ] If you changed matching: `./test.sh all` also passes.
+- [ ] If you changed matching: `./test.sh -a` also passes.
 - [ ] If you added/removed a CLI option: update `docs/usage.md` and `test.sh`.

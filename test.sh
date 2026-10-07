@@ -7,8 +7,10 @@
 # written into the ./test_results directory to keep the repo tree clean.
 #
 # Usage:
-#   ./test.sh            run the default test battery
-#   ./test.sh all        run the test battery against every image in niivue-images/
+#   ./test.sh           run the default test battery
+#   ./test.sh -a        run the test battery against every image in niivue-images/
+#   ./test.sh -v        verbose mode: stream program console output to the terminal
+#                       (options are combinable, e.g. ./test.sh -a -v)
 #
 # Exit code is 0 only if every test passed.
 
@@ -17,6 +19,9 @@ set -u
 TESTDIR="test_results"
 IMG_DIR="niivue-images"
 DEFAULT_IMG="$IMG_DIR/CT_Abdo.nii.gz"
+
+MODE=""
+VERBOSE=0
 
 PASS=0
 FAIL=0
@@ -41,9 +46,16 @@ run_test() {
     local logfile="$TESTDIR/$name.log"
     local ok=1
 
-    # Redirect the run's own output to a per-test log for inspection.
-    "$@" >"$logfile" 2>&1
-    local ret=$?
+    # Capture the run's own output to a per-test log. In verbose mode the
+    # output is also streamed to the terminal for easier debugging.
+    local ret
+    if [ "$VERBOSE" -eq 1 ]; then
+        "$@" 2>&1 | tee "$logfile"
+        ret=${PIPESTATUS[0]}
+    else
+        "$@" >"$logfile" 2>&1
+        ret=$?
+    fi
 
     if [ "$ret" -ne 0 ]; then
         echo "[FAIL] $name : command exited with code $ret"
@@ -73,8 +85,14 @@ expect_fail() {
     shift  # drop the "--"
 
     local logfile="$TESTDIR/$name.log"
-    "$@" >"$logfile" 2>&1
-    local ret=$?
+    local ret
+    if [ "$VERBOSE" -eq 1 ]; then
+        "$@" 2>&1 | tee "$logfile"
+        ret=${PIPESTATUS[0]}
+    else
+        "$@" >"$logfile" 2>&1
+        ret=$?
+    fi
 
     if [ "$ret" -ne 0 ]; then
         PASS=$((PASS+1))
@@ -110,6 +128,21 @@ if [ ! -f "$DEFAULT_IMG" ]; then
     exit 2
 fi
 
+# ---------------------------------------------------------------------------
+# Command-line options
+# ---------------------------------------------------------------------------
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -a) MODE=all ;;
+        -v) VERBOSE=1 ;;
+        *)  echo "Unknown option: $1" >&2
+            echo "Usage: $0 [-a] [-v]" >&2
+            exit 1 ;;
+    esac
+    shift
+done
+
 rm -rf "$TESTDIR"
 mkdir -p "$TESTDIR"
 
@@ -118,7 +151,7 @@ mkdir -p "$TESTDIR"
 # ---------------------------------------------------------------------------
 
 images=()
-if [ "${1:-}" = "all" ]; then
+if [ "$MODE" = "all" ]; then
     while IFS= read -r f; do
         images+=("$f")
     done < <(find "$IMG_DIR" -name '*.nii.gz' | sort)
