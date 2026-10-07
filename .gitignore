@@ -31,3 +31,6 @@ match3d
 .idea/
 *.swp
 *~
+
+# Test artifacts
+test_results/

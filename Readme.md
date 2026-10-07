@@ -32,6 +32,39 @@ GNU GPL
 	cmake . -DCMAKE_BUILD_TYPE=Release
 	make
 
+###  Testing ###
+
+The `test.sh` script runs a battery of automated scenarios against `surf3d`
+(and `match3d` when built), covering output formats, thresholds, descriptor
+types, threading, resampling, normalization, padding, compression, point-file
+reuse, and error handling. It validates that the expected output files are
+produced and prints a pass/fail summary.
+
+All artifacts are written into the `test_results/` subdirectory (which is
+git-ignored), so running the tests does not clutter the repository tree.
+
+Usage:
+
+	./test.sh          # run the full battery on a single default image
+	./test.sh all      # run the full battery on every image in niivue-images/
+
+The exit code is 0 only if every test passed. Per-test logs are kept in
+`test_results/<test>.log` for inspection.
+
+**Test data submodule.** The `niivue-images/` directory is a git submodule
+(https://github.com/neurolabusc/niivue-images) providing sample medical images
+used *only* for testing. It is optional — you can build and use `surf3d`
+without it. Clone it explicitly for testing:
+
+	git submodule update --init --recursive
+
+or fetch it as part of the initial clone:
+
+	git clone --recurse-submodules https://github.com/valette/vtkOpenSURF3D.git
+
+If the submodule is absent, `./test.sh` reports an error and exits without
+running.
+
 ###  Usage ###
 
 	surf3d file [options]

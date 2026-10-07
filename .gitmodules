@@ -1,0 +1,3 @@
+[submodule "niivue-images"]
+	path = niivue-images
+	url = https://github.com/neurolabusc/niivue-images.git
