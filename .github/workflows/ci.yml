@@ -30,6 +30,7 @@ jobs:
         path: 'source'
         fetch-depth: 0
         lfs: 'false'
+        submodules: 'recursive'
 
     - name: Install opencv
       run: |
@@ -47,4 +48,11 @@ jobs:
     - name: Build
       working-directory: ${{github.workspace}}/build
       run: cmake --build . --parallel 2
+
+    - name: Copy built binaries to source root
+      run: cp build/surf3d source/surf3d
+
+    - name: Run tests
+      working-directory: ${{github.workspace}}/source
+      run: ./test.sh
 
