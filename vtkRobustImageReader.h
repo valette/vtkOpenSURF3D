@@ -115,24 +115,22 @@ public :
 			Output->SetOrigin(Origin);
 		}
 
-		if (!flip[0] && !flip[1] && !flip[2]) {
-			return;
-		}
-
 		Output->GetSpacing(Spacing);
 		Output->GetDimensions(Dimensions);
 
-        for (int i = 0; i < 3; i++) {
-            if (!flip[i]) continue;
-            std::cout << "Warning : RobustReader flipping dimension " << i << std::endl;
-            vtkNew<vtkImageFlip> imgFlip;
-            imgFlip->SetInputData(Output);
-            imgFlip->SetFilteredAxis (i);
-            imgFlip->Update();
-            Output = imgFlip->GetOutput();
-			Output->GetOrigin(Origin);
-            Origin[i] = Origin[i] - Spacing[i] * ( Dimensions[i] - 1);
-			Output->SetOrigin(Origin);
+        if (flip[0] || flip[1] || flip[2]) {
+            for (int i = 0; i < 3; i++) {
+                if (!flip[i]) continue;
+                std::cout << "Warning : RobustReader flipping dimension " << i << std::endl;
+                vtkNew<vtkImageFlip> imgFlip;
+                imgFlip->SetInputData(Output);
+                imgFlip->SetFilteredAxis (i);
+                imgFlip->Update();
+                Output = imgFlip->GetOutput();
+				Output->GetOrigin(Origin);
+                Origin[i] = Origin[i] - Spacing[i] * ( Dimensions[i] - 1);
+				Output->SetOrigin(Origin);
+            }
         }
 
 		if (strcmp (Reader->GetClassName(), "vtkNIFTIImageReader") == 0) {
