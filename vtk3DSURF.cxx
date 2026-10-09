@@ -57,17 +57,23 @@ void vtk3DSURF::ReadIPoints() {
 		std::string  cell;
 
 		Ipoint point;
-		if ( !std::getline( lineStream, cell, ',' ) ) continue;
-		float x = std::stof( cell );
-		point.x = ( x - origin[ 0 ] ) / spacing[ 0 ];
-		std::getline( lineStream, cell, ',' );
-		float y = std::stof( cell );
-		point.y = ( y - origin[ 1 ] ) / spacing[ 1 ];
-		std::getline( lineStream, cell, ',' );
-		float z = std::stof( cell );
-		point.z = ( z - origin[ 2 ] ) / spacing[ 2 ];
-		std::getline( lineStream, cell, ',' );
-		point.scale = std::stof( cell ) / Sspacing;
+		float x = 0, y = 0, z = 0;
+		try {
+			if ( !std::getline( lineStream, cell, ',' ) ) continue;
+			x = std::stof( cell );
+			point.x = ( x - origin[ 0 ] ) / spacing[ 0 ];
+			std::getline( lineStream, cell, ',' );
+			y = std::stof( cell );
+			point.y = ( y - origin[ 1 ] ) / spacing[ 1 ];
+			std::getline( lineStream, cell, ',' );
+			z = std::stof( cell );
+			point.z = ( z - origin[ 2 ] ) / spacing[ 2 ];
+			std::getline( lineStream, cell, ',' );
+			point.scale = std::stof( cell ) / Sspacing;
+		} catch ( const std::exception &e ) {
+			std::cerr << "Warning : skipping malformed point row : " << line << " (" << e.what() << ")" << std::endl;
+			continue;
+		}
 		if ( !box.ContainsPoint( x, y, z ) ) {
 			std::cout << "Error : point " << this->points.size();
 			std::cout << " with coordinates : " << point.x << " " << point.y << " " << point.z << " is outside image" << std::endl;
