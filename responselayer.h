@@ -9,6 +9,9 @@
 *                                                          *
 ************************************************************/
 
+#ifndef RESPONSELAYER_H
+#define RESPONSELAYER_H
+
 #include <cstring>
 #include <cassert>
 #include <cstddef>
@@ -105,3 +108,5 @@ public:
   }
 
 };
+
+#endif // RESPONSELAYER_H
