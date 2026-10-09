@@ -20,7 +20,7 @@ This document provides a comprehensive technical audit of the **vtkOpenSURF3D** 
 
 ## 1. Memory Management & Resource Leaks (High Priority)
 
-- [ ] **[STILL OPEN (minor)] Per-candidate heap allocations in `interpolateStep` (`fasthessian.cxx:631-657`)**
+- [ ] **[M1][STILL OPEN (minor)] Per-candidate heap allocations in `interpolateStep` (`fasthessian.cxx:631-657`)**
   - **Issue**: `deriv4D()` and `hessian4D()` dynamically allocate `new cv::Matx41d()` and `new cv::Matx44d()`.
   - **Impact**: Unnecessary heap allocation and deallocation overhead for thousands of candidate points.
   - **Fix**: Return `cv::Matx41d` and `cv::Matx44d` by value on the stack.
@@ -29,17 +29,17 @@ This document provides a comprehensive technical audit of the **vtkOpenSURF3D** 
 
 ## 2. Algorithmic & Mathematical Inconsistencies (Medium Priority)
 
-- [ ] **[STILL OPEN] Rigid registration in `MatchPoint::getRT` hardcodes `R = Identity` (`MatchPoint.cxx:323-344`)**
+- [ ] **[A1][STILL OPEN] Rigid registration in `MatchPoint::getRT` hardcodes `R = Identity` (`MatchPoint.cxx:323-344`)**
   - **Issue**: The Umeyama SVD rotation calculation is commented out. `Transform.get_rotation() = R;` assigns identity.
   - **Impact**: `match3d` cannot estimate 3D rotations, only isotropic scale and translation.
   - **Fix**: Uncomment and validate the SVD-based rotation estimator, ensuring proper reflection handling when $\det(U V^T) < 0$.
 
-- [ ] **[STILL OPEN] Scale divisor check in `MatchPoint::getRT` (`MatchPoint.cxx:321`)**
+- [ ] **[A2][STILL OPEN] Scale divisor check in `MatchPoint::getRT` (`MatchPoint.cxx:321`)**
   - **Issue**: `double s = sqrt((EigCa * EigCb) / (EigCa * EigCa));`
   - **Impact**: If points in set A are collinear or identical, `EigCa * EigCa` can be 0, causing division by zero.
   - **Fix**: Guard against near-zero denominator before computing scale.
 
-- [ ] **[STILL OPEN] Inconsistent coordinate conventions across function signatures**
+- [ ] **[A3][STILL OPEN] Inconsistent coordinate conventions across function signatures**
   - **Issue**: Some methods use `(column, row, layer)` = $(x, y, z)$, while others pass `(r, c, d)` = $(y, x, z)$ or `(d, r, c)` = $(z, y, x)$ (e.g., `interpolateExtremum(d, r, c, ...)` vs `isExtremum(r, c, d, ...)`).
   - **Impact**: Highly error-prone for future maintainers.
   - **Fix**: Adopt a consistent parameter naming and ordering convention (e.g. `x, y, z` or `row, col, slice`).
@@ -48,7 +48,7 @@ This document provides a comprehensive technical audit of the **vtkOpenSURF3D** 
 
 ## 3. Safety, Robustness & Error Handling (Medium Priority)
 
-- [ ] **[STILL OPEN] Operator `-` semantics in `Ipoint` (`ipoint.h:35-45`)**
+- [ ] **[S1][STILL OPEN] Operator `-` semantics in `Ipoint` (`ipoint.h:35-45`)**
   - **Issue**: `float operator-(const Ipoint &rhs)` computes the Euclidean distance between descriptor vectors.
   - **Impact**: Overloading `operator-` to return a scalar distance is counter-intuitive in C++ (where subtraction usually returns a difference vector or offset). Furthermore, it does not verify that `this->descriptor.size() == rhs.descriptor.size()`.
   - **Fix**: Replace with a named method `float distanceTo(const Ipoint& rhs) const` and assert matching descriptor lengths.
@@ -57,18 +57,18 @@ This document provides a comprehensive technical audit of the **vtkOpenSURF3D** 
 
 ## 4. Code Quality, Modern C++ & Refactoring (Medium Priority)
 
-- [ ] **[STILL OPEN] Replace global macro definitions with inline functions**:
+- [ ] **[C1][STILL OPEN] Replace global macro definitions with inline functions**:
   - `integ(x,y,z)` and `sourc(x,y,z)` in `integral.h:6-7` pollute the global preprocessor namespace and rely on implicitly named local pointers (`pin_tegral`, `int_egral_incs`).
   - `PRINT`, `CHECKMAT`, `PRINTIF` in `fasthessian.cxx`.
   - **Fix**: Replace macros with typed inline helper functions or lambda accessors.
 
-- [ ] **[STILL OPEN] Remove dead / commented-out code**:
+- [ ] **[C2][STILL OPEN] Remove dead / commented-out code**:
   - `Surf::ThreadedDesc` declared in `surf.h:41` but never implemented.
   - `FastHessian::EigenValue` defined in `fasthessian.cxx:487-520` but never used.
   - `FastHessian::FittingQuadric` (~200 lines) dead code in `fasthessian.cxx`.
   - Unused variables generating compiler warnings (`imin2`, `temp2`, `test`, `bounds`, `img_pointer`, `layer_min`, `layer_max`).
 
-- [ ] **[STILL OPEN] Eliminate compiler warnings under `-Wall -Wextra`**:
+- [ ] **[C3][STILL OPEN] Eliminate compiler warnings under `-Wall -Wextra`**:
   - Constructor member initialization order warnings (`-Wreorder`) in `Ipoint`, `FastHessian`.
   - Signed vs. unsigned comparisons (`-Wsign-compare`) across loops in `vtk3DSURF.cxx`, `surf.cxx`, `fasthessian.cxx`.
   - Unused parameters (`-Wunused-parameter`) in `BoxIntegralOptim` and `buildResponseLayer`.
@@ -77,7 +77,7 @@ This document provides a comprehensive technical audit of the **vtkOpenSURF3D** 
 
 ## 5. Build System, CI & Repository Hygiene (Low Priority)
 
-- [ ] **[PARTIAL] Modernize `CMakeLists.txt`**:
+- [ ] **[B1][PARTIAL] Modernize `CMakeLists.txt`**:
   - Move `cmake_minimum_required(VERSION 3.20)` to line 1 outside any `if()` blocks (currently requires 3.30 inside an `if` statement).
   - Explicitly set `set(CMAKE_CXX_STANDARD 17)` and `set(CMAKE_CXX_STANDARD_REQUIRED ON)`.
   - Modernize target linking: use `target_link_libraries(surf3d PRIVATE VTK::... OpenMP::OpenMP_CXX ZLIB::ZLIB ${OpenCV_LIBS})` instead of global `include_directories` and modifying `CMAKE_CXX_FLAGS`.
@@ -85,7 +85,7 @@ This document provides a comprehensive technical audit of the **vtkOpenSURF3D** 
   - Add `install(TARGETS surf3d RUNTIME DESTINATION bin)`.
   - **Partial**: `CMAKE_CXX_STANDARD 17` / `REQUIRED ON` set and `target_link_libraries(... PRIVATE ...)` used for `surf3d`. Still open: `cmake_minimum_required` remains inside the `if()` block (line 2), global `include_directories` still used, no `find_package(LAPACK/BLAS)`/TooN resolution, no `install()`.
 
-- [ ] **[PARTIAL] Update GitHub Actions CI (`.github/workflows/ci.yml`)**:
+- [ ] **[B2][PARTIAL] Update GitHub Actions CI (`.github/workflows/ci.yml`)**:
   - Upgrade `actions/checkout@v2` to `@v4` to prevent deprecation warnings.
   - Add a testing step with sample image data to verify feature detection outputs (`ctest`).
   - **Partial**: A `./test.sh -v` testing step was added (ci.yml:63-67). Still open: `actions/checkout@v2` not yet upgraded to `@v4`.
@@ -94,7 +94,7 @@ This document provides a comprehensive technical audit of the **vtkOpenSURF3D** 
 
 ## 6. Documentation & CLI Consistency (Low Priority)
 
-- [ ] **[STILL OPEN] Document missing command-line options in `Readme.md` and usage printout**:
+- [ ] **[D1][STILL OPEN] Document missing command-line options in `Readme.md` and usage printout**:
   - Supported CLI options implemented in `surf3d.cxx` but omitted from `Readme.md` or `surf3d` usage text:
     - `-d <size>`: set maximum dimension size
     - `-m <mask>`: path to binary mask image
@@ -112,31 +112,31 @@ This document provides a comprehensive technical audit of the **vtkOpenSURF3D** 
 Ordered by priority. Each item lists the current `file:line` and the proposed fix.
 
 ### 7.1 Matching correctness
-- [ ] **Re-enable rotation in `getRT`** (`MatchPoint.cxx:323-344`) — uncomment and
+- [ ] **[A1] Re-enable rotation in `getRT`** (`MatchPoint.cxx:323-344`) — uncomment and
   validate the SVD/Umeyama rotation with proper reflection handling
   (`det(U V^T) < 0`).
 
 ### 7.2 Safety / robustness
-- [ ] **Guard `getRT` scale divisor** (`MatchPoint.cxx:321`) — skip/bail when
+- [ ] **[A2] Guard `getRT` scale divisor** (`MatchPoint.cxx:321`) — skip/bail when
   `EigCa*EigCa` is near zero.
-- [ ] **Rename `Ipoint::operator-`** (`ipoint.h:35-45`) — replace with a named
+- [ ] **[S1] Rename `Ipoint::operator-`** (`ipoint.h:35-45`) — replace with a named
   `distanceTo(const Ipoint&) const` and assert matching descriptor lengths.
 
 ### 7.3 Cleanup / minor
-- [ ] **Remove dead code** (`surf.h:41` `ThreadedDesc`; `fasthessian.cxx:479`
+- [ ] **[C2] Remove dead code** (`surf.h:41` `ThreadedDesc`; `fasthessian.cxx:479`
   `EigenValue`; `fasthessian.cxx:716` `FittingQuadric`; unused variables).
-- [ ] **Return matrices by value** (`fasthessian.cxx:623-624,665,hessian4D`) —
+- [ ] **[M1] Return matrices by value** (`fasthessian.cxx:623-624,665,hessian4D`) —
   have `deriv4D`/`hessian4D` return `cv::Matx41d`/`cv::Matx44d` on the stack.
-- [ ] **Replace macros** (`integral.h:6-7` `integ/sourc`; `fasthessian.cxx`
+- [ ] **[C1] Replace macros** (`integral.h:6-7` `integ/sourc`; `fasthessian.cxx`
   `PRINT`/`CHECKMAT`/`PRINTIF`) with inline functions.
-- [ ] **Triage `-Wall -Wextra` warnings** — `-Wreorder`, `-Wsign-compare`,
+- [ ] **[C3] Triage `-Wall -Wextra` warnings** — `-Wreorder`, `-Wsign-compare`,
   `-Wunused-parameter` across the sources.
 
 ### 7.4 Build / CI / docs (low priority)
-- [ ] **Modernize `CMakeLists.txt`** — move `cmake_minimum_required` to line 1,
+- [ ] **[B1] Modernize `CMakeLists.txt`** — move `cmake_minimum_required` to line 1,
   replace global `include_directories`, add `find_package(LAPACK/BLAS)` + TooN
   path for `BUILD_SURFMATCH`, add `install(TARGETS surf3d ...)`.
-- [ ] **Upgrade CI** (`ci.yml:28`) — `actions/checkout@v2` → `@v4`.
-- [ ] **Document missing CLI options** — add `-d`, `-m`, `-nt`, `-p`, `-pad`,
+- [ ] **[B2] Upgrade CI** (`ci.yml:28`) — `actions/checkout@v2` → `@v4`.
+- [ ] **[D1] Document missing CLI options** — add `-d`, `-m`, `-nt`, `-p`, `-pad`,
   `-gz`, `-precision` to `Readme.md` option table.
 
