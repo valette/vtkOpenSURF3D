@@ -131,6 +131,10 @@ class FastHessian {
     //! Threshold value for blob resonses
     float thresh;
 
+    //! Number of detected blob / corner points
+    int nb_pts;
+    int nb_corner_pts;
+
 	inline void print(cv::Mat *input);
 };
 

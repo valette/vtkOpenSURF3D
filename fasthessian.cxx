@@ -21,9 +21,6 @@
 
 using namespace std;
 
-int nb_pts = 0;
-int nb_corner_pts = 0;
-
 #define PRINT(mat1) 											\
 	{ bool flag = false; 												\
 	for (int i = 0 ; i < mat1.rows ; i ++)	{							\
@@ -41,7 +38,7 @@ int nb_corner_pts = 0;
 FastHessian::FastHessian(std::vector<Ipoint> &ipts,
 						 const int octaves, const int intervals, const int init_sample,
                          const float thresh)
-                         : ipts(ipts), i_width(0), i_height(0), i_depth(0), Current_thread_ID(0), Current_decile(0), Mask(0)
+                         : ipts(ipts), i_width(0), i_height(0), i_depth(0), Current_thread_ID(0), Current_decile(0), Mask(0), nb_pts(0), nb_corner_pts(0)
 {
   // Save parameter set
   saveParameters(octaves, intervals, init_sample, thresh);
@@ -54,7 +51,7 @@ FastHessian::FastHessian(vtkImageData *img,
 						 std::vector<Ipoint> &ipts,
                          const int octaves, const int intervals, const int init_sample,
                          const float thresh)
-                         : ipts(ipts), i_width(0), i_height(0), i_depth(0), Current_thread_ID(0), Current_decile(0), Mask(0)
+                         : ipts(ipts), i_width(0), i_height(0), i_depth(0), Current_thread_ID(0), Current_decile(0), Mask(0), nb_pts(0), nb_corner_pts(0)
 {
   // Save parameter set
   saveParameters(octaves, intervals, init_sample, thresh);
@@ -571,7 +568,6 @@ int FastHessian::isCornerExtremum(int r, int c, int d, ResponseLayer *t, Respons
 }
 
 //-------------------------------------------------------
- int fsdi = 0;
 
 //! Interpolate scale-space extrema to subpixel accuracy to form an image feature.
 void FastHessian::interpolateExtremum(int d, int r, int c, ResponseLayer *t, ResponseLayer *m, ResponseLayer *b, bool corner)
