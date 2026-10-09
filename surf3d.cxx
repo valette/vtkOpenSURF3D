@@ -292,7 +292,8 @@ int main( int argc, char *argv[] )
 
 	SURF->Update();
 
-	//save bounds values to json. TODO : choose an other file name if points are saved as JSON
+	//save bounds values to json (skip when the keypoints JSON is written, since
+	//it already embeds the same bounds metadata and would otherwise overwrite it)
 	double boundsArray[ 6 ];
 	image->GetBounds( boundsArray );
 	picojson::object root, bounds;
@@ -303,10 +304,12 @@ int main( int argc, char *argv[] )
 	bounds[ "zmin" ] = picojson::value( boundsArray[ 4 ] );
 	bounds[ "zmax" ] = picojson::value( boundsArray[ 5 ] );
 	root[ "bounds" ] = picojson::value( bounds );
-	ofstream boundsFile;
-	boundsFile.open( outfilename+".json" , std::ofstream::out | std::ofstream::trunc );
-	boundsFile << picojson::value( root );
-	boundsFile.close();
+	if ( !writeJSON ) {
+		ofstream boundsFile;
+		boundsFile.open( outfilename+".json" , std::ofstream::out | std::ofstream::trunc );
+		boundsFile << picojson::value( root );
+		boundsFile.close();
+	}
 
 	if ( writeJSON ) {
 
