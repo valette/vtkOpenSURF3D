@@ -203,9 +203,9 @@ void FastHessian::getIpoints()
 				 d < LimSupScale || d >= t->depth - LimSupScale )
 					param &= LAST_SCALE;
 
-			if ( r*(int)(t->width/b->width) < LimDownScale || r*(int)(t->width/b->width) >= b->height- LimDownScale ||
-				 c*(int)(t->width/b->width) < LimDownScale || c*(int)(t->width/b->width) >= b->width - LimDownScale ||
-				 d*(int)(t->width/b->width) < LimDownScale || d*(int)(t->width/b->width) >= b->depth - LimDownScale )
+			if ( r*(int)(b->width/t->width) < LimDownScale || r*(int)(b->width/t->width) >= b->height- LimDownScale ||
+				 c*(int)(b->width/t->width) < LimDownScale || c*(int)(b->width/t->width) >= b->width - LimDownScale ||
+				 d*(int)(b->width/t->width) < LimDownScale || d*(int)(b->width/t->width) >= b->depth - LimDownScale )
 					param &= FIRST_SCALE;
 
 			//param = 0;
