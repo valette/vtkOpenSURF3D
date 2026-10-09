@@ -60,7 +60,7 @@ inline unsigned long long BoxIntegral(vtkImageData *img, int dim0, int dim1, int
   if (x1 >= 0 && y1 >= 0 && z1 >= 0)
 		b111 = *static_cast<unsigned long long*>(img->GetScalarPointer(x1, y1, z1));
 
-  return std::max((unsigned long long)0, b222 - b221 - b212 - b122 + b112 + b121 + b211 - b111 );
+  return std::max((long long)0, (long long)b222 - (long long)b221 - (long long)b212 - (long long)b122 + (long long)b112 + (long long)b121 + (long long)b211 - (long long)b111 );
 }
 //#define DEBUG
 
@@ -106,14 +106,15 @@ inline unsigned long long BoxIntegralOptim( const vtkImageData *img, const int& 
   assert(x1 >= 0 && y1 >= 0 && z1 >= 0);
 #endif
 
-  return  integ(x2, y2, z2)
-		- integ(x2, y2, z1)
-		- integ(x2, y1, z2)
-		- integ(x1, y2, z2)
-		+ integ(x1, y1, z2)
-		+ integ(x1, y2, z1)
-		+ integ(x2, y1, z1)
-		- integ(x1, y1, z1);
+  return (unsigned long long) std::max((long long)0,
+		 (long long) integ(x2, y2, z2)
+		- (long long) integ(x2, y2, z1)
+		- (long long) integ(x2, y1, z2)
+		- (long long) integ(x1, y2, z2)
+		+ (long long) integ(x1, y1, z2)
+		+ (long long) integ(x1, y2, z1)
+		+ (long long) integ(x2, y1, z1)
+		- (long long) integ(x1, y1, z1) );
 }
 
 
